@@ -61,10 +61,11 @@ def _do_login() -> bool:
                     const e = document.querySelector('input#login_email_username');
                     const p = document.querySelector('input#login_password');
                     e.value = {repr(email)};
-                    e.dispatchEvent(new Event('input', {{bubbles: true}}));
+                    ['input', 'change'].forEach(ev => e.dispatchEvent(new Event(ev, {{bubbles: true}})));
                     p.value = {repr(password)};
-                    p.dispatchEvent(new Event('input', {{bubbles: true}}));
-                    document.querySelector('input#login_submit').click();
+                    ['input', 'change'].forEach(ev => p.dispatchEvent(new Event(ev, {{bubbles: true}})));
+                    const form = document.querySelector('input#login_submit').closest('form');
+                    if (form) form.requestSubmit(); else document.querySelector('input#login_submit').click();
                 """)
                 page.wait_for_load_state("domcontentloaded")
                 page.wait_for_timeout(3000)
