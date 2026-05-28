@@ -1,18 +1,13 @@
 """
 Load session, navigate to your actual search URL, dump HTML for selector inspection.
 """
-import sys, re
+import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from dotenv import load_dotenv
-load_dotenv()
-
 from playwright.sync_api import sync_playwright
-
-SESSION_FILE = Path("data/session.json")
-SEARCH_URL = "https://www.wg-gesucht.de/1-zimmer-wohnungen-und-wohnungen-und-haeuser-in-Hamburg.55.1+2+3.1.0.html"
+from src.config import SEARCH_URL, SESSION_FILE
 
 with sync_playwright() as p:
     browser = p.chromium.launch(headless=True)

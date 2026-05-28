@@ -3,7 +3,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 from src.auth import ensure_session
-from src.config import CRAWL_MAX_PAGES, HEADLESS
+from src.config import AI_ENABLED, CRAWL_MAX_PAGES, HEADLESS, MAX_AI_CALLS_PER_RUN
 from src.crawler import crawl
 from src.filters import run_checks
 from src.seen import load_seen, mark_seen
@@ -22,6 +22,8 @@ def main():
     for listing in listings:
         lid = listing["id"]
         if lid in seen:
+            print(f"\n  {listing['title']}")
+            print(f"    ↷ already seen ({lid})")
             continue
         seen.add(lid)
 
@@ -39,18 +41,38 @@ def main():
     print(f"\n{len(new_matches)} new matches out of {len(listings)} listings")
 
     if new_matches:
-        print("\nScraping detail pages...")
-        details = scrape_details([m["url"] for m in new_matches])
+        if not AI_ENABLED:
+            print("AI disabled — sending basic alerts only")
+            for match in new_matches:
+                send(format_listing(match))
+        else:
+            ai_matches = new_matches[:MAX_AI_CALLS_PER_RUN]
+            basic_matches = new_matches[MAX_AI_CALLS_PER_RUN:]
+            print(
+                f"AI enabled — analysing {len(ai_matches)} listing(s), "
+                f"skipping {len(basic_matches)} due to cap"
+            )
 
-        print("Running AI analysis...")
-        with ThreadPoolExecutor() as ex:
-            futures = [(m, ex.submit(analyze, m, details.get(m["url"], ""))) for m in new_matches]
-        for match, fut in futures:
-            analysis = fut.result()
-            if analysis:
-                print(f"  {match['title']}: match={analysis['recommendation_score']}/10  scam={analysis['scam_score']}/10  — {analysis.get('scam_reason', '')}")
-                send(format_listing_with_ai(match, analysis))
-            else:
+            details: dict[str, str] = {}
+            if ai_matches:
+                print("\nScraping detail pages...")
+                details = scrape_details([m["url"] for m in ai_matches])
+
+                print("Running AI analysis...")
+                with ThreadPoolExecutor(max_workers=MAX_AI_CALLS_PER_RUN) as ex:
+                    futures = [
+                        (m, ex.submit(analyze, m, details.get(m["url"], "")))
+                        for m in ai_matches
+                    ]
+                for match, fut in futures:
+                    analysis = fut.result()
+                    if analysis:
+                        print(f"  {match['title']}: match={analysis['recommendation_score']}/10  scam={analysis['scam_score']}/10  — {analysis.get('scam_reason', '')}")
+                        send(format_listing_with_ai(match, analysis))
+                    else:
+                        send(format_listing(match))
+
+            for match in basic_matches:
                 send(format_listing(match))
 
     print("\nPress ENTER to exit.")

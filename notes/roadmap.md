@@ -31,6 +31,7 @@
 - [x] Price ≤ budget
 - [x] Rental period overlaps Aug–Feb
 - [x] District matches preferred list
+- [ ] Fix district false negatives: current filter only checks district strings in the search result card location. Listings that show only generic `Hamburg` or a street, e.g. `Hamburg | Ifflandstraße`, are rejected even if the detail page might be in a preferred district.
 
 ### Telegram Notifications
 - [x] Send basic alert (title, price, district, URL)

@@ -1,9 +1,15 @@
-import os
 import re
 
 from playwright.sync_api import sync_playwright, Page, Locator
 
-from src.config import BASE_URL, SEARCH_URL, SESSION_FILE, DEFAULT_AVAILABLE_FROM, DEFAULT_AVAILABLE_UNTIL
+from src.config import (
+    BASE_URL,
+    SEARCH_URL,
+    SESSION_FILE,
+    DEFAULT_AVAILABLE_FROM,
+    DEFAULT_AVAILABLE_UNTIL,
+    DEFAULT_MAX_RENT,
+)
 
 
 def _iso_to_de(iso: str) -> str:
@@ -22,9 +28,9 @@ def _apply_filters(page: Page) -> str:
 
     Returns the URL after filters are applied (used as base for pagination).
     """
-    max_rent = os.getenv("MAX_RENT", "1500")
-    date_from = _iso_to_de(os.getenv("AVAILABLE_FROM", DEFAULT_AVAILABLE_FROM))
-    date_to = _iso_to_de(os.getenv("AVAILABLE_UNTIL", DEFAULT_AVAILABLE_UNTIL))
+    max_rent = str(DEFAULT_MAX_RENT)
+    date_from = _iso_to_de(DEFAULT_AVAILABLE_FROM)
+    date_to = _iso_to_de(DEFAULT_AVAILABLE_UNTIL)
 
     # Deselect WG-Zimmer category if it came pre-selected
     page.locator("button[data-id='categories']").click()

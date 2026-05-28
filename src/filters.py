@@ -1,4 +1,3 @@
-import os
 import re
 from datetime import datetime, timedelta
 
@@ -10,10 +9,9 @@ from src.config import (
     LAST_ONLINE_MAX_DAYS,
 )
 
-# Resolved once at import time from .env (falls back to config defaults).
-MAX_RENT = int(os.getenv("MAX_RENT", str(DEFAULT_MAX_RENT)))
-AVAILABLE_FROM = datetime.strptime(os.getenv("AVAILABLE_FROM", DEFAULT_AVAILABLE_FROM), "%Y-%m-%d")
-AVAILABLE_UNTIL = datetime.strptime(os.getenv("AVAILABLE_UNTIL", DEFAULT_AVAILABLE_UNTIL), "%Y-%m-%d")
+MAX_RENT = DEFAULT_MAX_RENT
+AVAILABLE_FROM = datetime.strptime(DEFAULT_AVAILABLE_FROM, "%Y-%m-%d")
+AVAILABLE_UNTIL = datetime.strptime(DEFAULT_AVAILABLE_UNTIL, "%Y-%m-%d")
 
 
 def _parse_date(value: str) -> datetime | None:

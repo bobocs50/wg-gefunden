@@ -1,13 +1,20 @@
 import json
 import os
-from pathlib import Path
 
 from google import genai
 from google.genai import types
 
-from src.config import GEMINI_MODEL, MAX_OUTPUT_TOKENS
+from src.config import (
+    AI_PROMPT_FILE,
+    GEMINI_MODEL,
+    MAX_OUTPUT_TOKENS,
+    PROFILE_CONTEXT,
+    PROFILE_MUST_HAVES,
+    PROFILE_NAME,
+    PROFILE_NICE_TO_HAVES,
+    PROFILE_STRONG_PREFERENCES,
+)
 
-_PROMPT_FILE = Path(__file__).parent.parent / "prompts" / "listing_analysis.md"
 _REQUIRED_KEYS = {"scam_score", "scam_reason", "recommendation_score", "pros", "cons", "summary"}
 
 _prompt_cache: str | None = None
@@ -17,8 +24,32 @@ _client: genai.Client | None = None
 def _load_prompt() -> str:
     global _prompt_cache
     if _prompt_cache is None:
-        _prompt_cache = _PROMPT_FILE.read_text(encoding="utf-8")
+        _prompt_cache = AI_PROMPT_FILE.read_text(encoding="utf-8")
     return _prompt_cache
+
+
+def _bullet_list(items: list[str]) -> str:
+    return "\n".join(f"- {item}" for item in items) if items else "- Not specified"
+
+
+def _profile_block() -> str:
+    return "\n".join(
+        [
+            f"Name: {PROFILE_NAME}",
+            "",
+            "Context:",
+            PROFILE_CONTEXT or "Not specified",
+            "",
+            "Must-haves:",
+            _bullet_list(PROFILE_MUST_HAVES),
+            "",
+            "Strong preferences:",
+            _bullet_list(PROFILE_STRONG_PREFERENCES),
+            "",
+            "Nice to have:",
+            _bullet_list(PROFILE_NICE_TO_HAVES),
+        ]
+    )
 
 
 def _get_client() -> genai.Client:
@@ -40,6 +71,7 @@ def _build_prompt(listing: dict, detail_text: str) -> str:
 
     return (
         _load_prompt()
+        .replace("{{PROFILE}}", _profile_block())
         .replace("{{LISTING}}", listing_block)
         .replace("{{DETAIL_TEXT}}", detail_block)
     )
