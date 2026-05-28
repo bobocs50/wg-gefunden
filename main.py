@@ -19,7 +19,15 @@ def main():
         print("ERROR: Could not establish a valid session — aborting")
         return
     seen = load_seen()
-    listings = crawl(max_pages=CRAWL_MAX_PAGES, headless=HEADLESS)
+    try:
+        listings = crawl(max_pages=CRAWL_MAX_PAGES, headless=HEADLESS)
+    except Exception as e:
+        print(f"Crawl failed ({e}) — retrying once...")
+        try:
+            listings = crawl(max_pages=CRAWL_MAX_PAGES, headless=HEADLESS)
+        except Exception as e2:
+            print(f"Crawl failed again ({e2}) — aborting")
+            return
 
     new_matches: list[dict] = []
 
