@@ -63,7 +63,7 @@ BASE_URL = "https://www.wg-gesucht.de"
 SEARCH_URL = BASE_URL + "/1-zimmer-wohnungen-und-wohnungen-und-haeuser-in-Hamburg.55.1+2+3.1.0.html"
 
 # ─── Paths ────────────────────────────────────────────────────────────────────
-DATA_DIR = ROOT_DIR / "data"
+DATA_DIR = Path(os.getenv("DATA_DIR", str(ROOT_DIR / "data")))
 SEEN_IDS_FILE = DATA_DIR / "seen_ids.json"
 SESSION_FILE = DATA_DIR / "session.json"
 

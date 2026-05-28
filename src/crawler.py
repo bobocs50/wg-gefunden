@@ -23,6 +23,16 @@ def _paginated_url(base_url: str, page_index: int) -> str:
     return re.sub(r'\.\d+\.html', f'.{offset}.html', base_url)
 
 
+def _dismiss_cookie_banner(page: Page) -> None:
+    try:
+        page.wait_for_selector("a.cmptxt_btn_yes", timeout=5000)
+        page.click("a.cmptxt_btn_yes")
+        page.wait_for_load_state("domcontentloaded")
+        page.wait_for_timeout(1000)
+    except Exception:
+        pass
+
+
 def _apply_filters(page: Page) -> str:
     """Click through the WG-Gesucht filter UI to set rent ceiling and date window.
 
@@ -31,6 +41,8 @@ def _apply_filters(page: Page) -> str:
     max_rent = str(DEFAULT_MAX_RENT)
     date_from = _iso_to_de(DEFAULT_AVAILABLE_FROM)
     date_to = _iso_to_de(DEFAULT_AVAILABLE_UNTIL)
+
+    _dismiss_cookie_banner(page)
 
     # Deselect WG-Zimmer category if it came pre-selected
     page.locator("button[data-id='categories']").click()
@@ -124,7 +136,10 @@ def crawl(max_pages: int = 3, headless: bool = False) -> list[dict]:
     all_listings: list[dict] = []
 
     with sync_playwright() as p:
-        browser = p.chromium.launch(headless=headless)
+        browser = p.chromium.launch(
+            headless=headless,
+            args=["--no-sandbox", "--disable-setuid-sandbox"],
+        )
         if SESSION_FILE.exists():
             context = browser.new_context(storage_state=str(SESSION_FILE))
         else:

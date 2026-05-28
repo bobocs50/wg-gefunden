@@ -40,7 +40,10 @@ def scrape_details(urls: list[str]) -> dict[str, str]:
     results: dict[str, str] = {}
 
     with sync_playwright() as p:
-        browser = p.chromium.launch(headless=True)
+        browser = p.chromium.launch(
+            headless=True,
+            args=["--no-sandbox", "--disable-setuid-sandbox"],
+        )
         context = (
             browser.new_context(storage_state=str(SESSION_FILE))
             if SESSION_FILE.exists()

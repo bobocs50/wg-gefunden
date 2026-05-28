@@ -68,14 +68,20 @@ def reject_reason(listing: dict) -> str | None:
     return None
 
 
+def _type_ok(url: str) -> bool:
+    return "/wg-zimmer-in-" not in url
+
+
 def run_checks(listing: dict) -> list[tuple[str, str, bool]]:
     """Returns per-filter (name, display_value, passed) tuples for console reporting."""
+    url = listing.get("url", "")
     price_text = listing.get("price_text", "0")
     location = listing.get("location", "")
     d_start = listing.get("date_start", "")
     d_end = listing.get("date_end", "")
     last_online = listing.get("last_online", "")
     return [
+        ("type",     "flatshare" if not _type_ok(url) else "ok", _type_ok(url)),
         ("price",    price_text,                                  _price_ok(price_text)),
         ("district", location[:45].strip(),                       _district_ok(location)),
         ("dates",    f"{d_start} – {d_end}" if d_start else "?", _dates_ok(d_start, d_end)),

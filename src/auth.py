@@ -10,7 +10,10 @@ WGG_HOME = "https://www.wg-gesucht.de"
 def _session_valid() -> bool:
     """Check whether the saved session is still authenticated."""
     with sync_playwright() as p:
-        browser = p.chromium.launch(headless=True)
+        browser = p.chromium.launch(
+            headless=True,
+            args=["--no-sandbox", "--disable-setuid-sandbox"],
+        )
         try:
             context = browser.new_context(storage_state=str(SESSION_FILE))
             page = context.new_page()
@@ -32,7 +35,10 @@ def _do_login() -> bool:
 
     print("Logging in to WG-Gesucht...")
     with sync_playwright() as p:
-        browser = p.chromium.launch(headless=True)
+        browser = p.chromium.launch(
+            headless=True,
+            args=["--no-sandbox", "--disable-setuid-sandbox"],
+        )
         try:
             context = browser.new_context()
             page = context.new_page()

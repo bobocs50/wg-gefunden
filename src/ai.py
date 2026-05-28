@@ -1,5 +1,6 @@
 import json
 import os
+import threading
 
 from google import genai
 from google.genai import types
@@ -19,6 +20,7 @@ _REQUIRED_KEYS = {"scam_score", "scam_reason", "recommendation_score", "pros", "
 
 _prompt_cache: str | None = None
 _client: genai.Client | None = None
+_client_lock = threading.Lock()
 
 
 def _load_prompt() -> str:
@@ -54,8 +56,9 @@ def _profile_block() -> str:
 
 def _get_client() -> genai.Client:
     global _client
-    if _client is None:
-        _client = genai.Client(api_key=os.environ["GEMINI_API_KEY"])
+    with _client_lock:
+        if _client is None:
+            _client = genai.Client(api_key=os.environ["GEMINI_API_KEY"])
     return _client
 
 

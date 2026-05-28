@@ -15,7 +15,9 @@ from src.telegram import send, format_listing, format_listing_with_ai
 
 
 def main():
-    ensure_session()
+    if not ensure_session():
+        print("ERROR: Could not establish a valid session — aborting")
+        return
     seen = load_seen()
     listings = crawl(max_pages=CRAWL_MAX_PAGES, headless=HEADLESS)
 
