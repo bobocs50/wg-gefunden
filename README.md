@@ -70,6 +70,7 @@ Filters applied — https://www.wg-gesucht.de/...
   page 1: 8 listings
 
   Helle Wohnung in Hamburg
+    ✓ type       ok
     ✓ price      1000 €
     ✓ district   1-Zimmer-Wohnung | Hamburg | ...
     ✓ dates      01.08.2026 –
@@ -159,6 +160,52 @@ The defaults are intentionally conservative. Before deploying with AI enabled, s
 - Keep `CRAWL_MAX_PAGES=1` unless you explicitly want more crawl load.
 - Set a billing budget and alert before turning AI on.
 - Do not log full listing text or prompt payloads.
+- Set `DATA_DIR=/path/to/persistent/volume` so `session.json` and `seen_ids.json` survive between runs.
+
+### Cron Schedule (recommended)
+
+Run during active posting hours only — landlords rarely post at night.
+
+```
+# Morning 6:30–10:00 → every 15 min
+8,23,38,53 6,7,8,9 * * * cd /root/wggefunden && venv/bin/python3 main.py >> logs/main.log 2>&1
+
+# Lunch 12:00–14:00 → every 15 min
+11,26,41,56 12,13 * * * cd /root/wggefunden && venv/bin/python3 main.py >> logs/main.log 2>&1
+
+# Evening 17:00–22:00 → every 15 min
+14,29,44,59 17,18,19,20,21 * * * cd /root/wggefunden && venv/bin/python3 main.py >> logs/main.log 2>&1
+```
+
+Each slot uses a different minute offset so runs don't align with round numbers — harder to detect as a bot. ~60 runs/day, max 180 Gemini calls.
+
+Setup on the server:
+
+```bash
+mkdir -p /root/wggefunden/logs
+crontab -e   # paste the 3 lines above
+```
+
+### Server Tips (Hetzner / Ubuntu)
+
+```bash
+# Keep the session alive after you disconnect
+apt install -y screen
+screen -S wg
+# run your commands inside screen, then Ctrl+A D to detach
+
+# Check cron is running
+systemctl status cron
+
+# Watch the live log
+tail -f /root/wggefunden/logs/main.log
+
+# Check disk usage (seen_ids.json grows over time, stays small)
+du -sh /root/wggefunden/data/
+
+# Restart server without losing cron jobs
+reboot   # cron jobs survive reboots automatically
+```
 
 ## Safety
 
