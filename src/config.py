@@ -43,11 +43,10 @@ PREFERRED_DISTRICTS: list[str] = [
     "winterhude",
     "lokstedt",
     "langenhorn",
-    "borgfelde",
 ]
 
-DEFAULT_MAX_RENT: int = _int_env("MAX_RENT", 1500, minimum=1)
-DEFAULT_AVAILABLE_FROM: str = os.getenv("AVAILABLE_FROM", "2026-08-15")
+DEFAULT_MAX_RENT: int = _int_env("MAX_RENT", 1000, minimum=1)
+DEFAULT_AVAILABLE_FROM: str = os.getenv("AVAILABLE_FROM", "2026-08-01")
 DEFAULT_AVAILABLE_UNTIL: str = os.getenv("AVAILABLE_UNTIL", "2027-02-05")
 
 # Listings whose landlord has been offline longer than this are filtered out.

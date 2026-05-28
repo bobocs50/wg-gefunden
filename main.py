@@ -1,5 +1,7 @@
 from concurrent.futures import ThreadPoolExecutor
+
 from dotenv import load_dotenv
+
 load_dotenv()
 
 from src.auth import ensure_session
@@ -74,12 +76,6 @@ def main():
 
             for match in basic_matches:
                 send(format_listing(match))
-
-    print("\nPress ENTER to exit.")
-    try:
-        input()
-    except EOFError:
-        pass
 
     mark_seen(seen, [l["id"] for l in listings])
 

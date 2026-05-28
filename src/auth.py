@@ -71,6 +71,7 @@ def _do_login() -> bool:
                 print("WARNING: Login failed — still on login page (wrong credentials?)")
                 return False
 
+            SESSION_FILE.parent.mkdir(parents=True, exist_ok=True)
             context.storage_state(path=str(SESSION_FILE))
             print(f"Session saved → {SESSION_FILE}")
             return True
@@ -78,10 +79,10 @@ def _do_login() -> bool:
             browser.close()
 
 
-def ensure_session() -> None:
+def ensure_session() -> bool:
     """Ensure a valid session file exists before crawling. Re-logins automatically if expired."""
     if SESSION_FILE.exists() and _session_valid():
         print("Session valid.")
-        return
+        return True
     print("Session missing or expired — re-logging in...")
-    _do_login()
+    return _do_login()
