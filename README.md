@@ -173,8 +173,8 @@ Run during active posting hours only — landlords rarely post at night.
 # Lunch 12:00–14:00 → every 15 min
 11,26,41,56 12,13 * * * cd /root/wggefunden && venv/bin/python3 main.py >> logs/main.log 2>&1
 
-# Evening 17:00–22:00 → every 15 min
-14,29,44,59 17,18,19,20,21 * * * cd /root/wggefunden && venv/bin/python3 main.py >> logs/main.log 2>&1
+# Evening 17:00–23:00 → every 15 min
+14,29,44,59 17,18,19,20,21,22,23 * * * cd /root/wggefunden && venv/bin/python3 main.py >> logs/main.log 2>&1
 ```
 
 Each slot uses a different minute offset so runs don't align with round numbers — harder to detect as a bot. ~60 runs/day, max 180 Gemini calls.

@@ -100,5 +100,4 @@ PROFILE_NICE_TO_HAVES: list[str] = [
     "Balcony",
     "Washing machine",
     "Fast internet",
-    "Friendly flatmates",
 ]
