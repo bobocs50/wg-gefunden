@@ -3,7 +3,6 @@ import re
 
 from playwright.sync_api import sync_playwright, Page, Locator
 
-from src.auth import is_logged_in, login
 from src.config import BASE_URL, SEARCH_URL, SESSION_FILE, DEFAULT_AVAILABLE_FROM, DEFAULT_AVAILABLE_UNTIL
 
 
@@ -130,11 +129,6 @@ def crawl(max_pages: int = 3, headless: bool = False) -> list[dict]:
         page.set_viewport_size({"width": 1280, "height": 900})
         page.goto(SEARCH_URL, wait_until="domcontentloaded")
         page.wait_for_timeout(1500)
-
-        if not is_logged_in(page):
-            login(page, context)
-            page.goto(SEARCH_URL, wait_until="domcontentloaded")
-            page.wait_for_timeout(1500)
 
         filtered_url = _apply_filters(page)
         print(f"Filters applied — {filtered_url}")

@@ -28,11 +28,6 @@ DEFAULT_MAX_RENT: int = 1500              # €/month ceiling
 DEFAULT_AVAILABLE_FROM: str = "2026-08-15"   # ISO date — must be available by this date
 DEFAULT_AVAILABLE_UNTIL: str = "2027-02-05"  # ISO date — must run at least until this date
 
-# ─── Philipp's real search settings (set in .env) ─────────────────────────────
-# MAX_RENT=1000
-# AVAILABLE_FROM=2026-08-01   move in from August 2026
-# AVAILABLE_UNTIL=2027-02-01  stay until February 2027
-
 # Listings whose landlord has been offline longer than this are filtered out.
 LAST_ONLINE_MAX_DAYS: int = 7
 
@@ -46,6 +41,11 @@ HEADLESS: bool = True
 DATA_DIR = Path("data")
 SEEN_IDS_FILE = DATA_DIR / "seen_ids.json"
 SESSION_FILE = DATA_DIR / "session.json"   # Playwright storage state (gitignored)
+
+# ─── AI ───────────────────────────────────────────────────────────────────────
+GEMINI_MODEL = "gemini-2.5-flash"
+MAX_DETAIL_CHARS = 4000   # truncate scraped page content before sending to Gemini
+MAX_OUTPUT_TOKENS = 1200  # cap Gemini response length
 
 # ─── WG-Gesucht ───────────────────────────────────────────────────────────────
 BASE_URL = "https://www.wg-gesucht.de"
