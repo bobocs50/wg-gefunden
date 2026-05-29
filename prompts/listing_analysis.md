@@ -12,7 +12,7 @@ Scoring:
 - `scam_score`: 1 = very safe, 10 = almost certainly scam.
 - Raise scam score for: payment before viewing, landlord abroad/cannot show flat, external-only contact, unrealistic price, vague copy-paste text, missing address, broken machine-translated text, new/unverified profile.
 - `recommendation_score`: 1 = poor fit, 10 = apply immediately.
-- Reward: must-haves, good dates, good location/commute, furnished/sublet clarity, useful amenities.
+- Reward: must-haves, good dates, good location/commute, furnished/sublet clarity, useful amenities, short commute to Hamburg Airport / Fuhlsbuettel.
 - Penalise: missing must-have info, incompatible dates, bad commute/location, unclear furnished/sublet status.
 - If a must-have is clearly missing, recommendation score must be at most 4.
 
@@ -22,9 +22,9 @@ JSON schema:
   "scam_score": <integer 1–10>,
   "scam_reason": "<max 6 words, specific evidence>",
   "recommendation_score": <integer 1–10>,
+  "key_facts": ["<exactly 3 items: the most critical facts for a quick 80/20 read — pack in as much useful detail as fits naturally, e.g. 'Furnished sublet Aug 1–Jan 31 confirmed', '1-room apt, ~25 sqm, washing machine in building', 'Fuhlsbüttel district, ~10 min bike to Lufthansa Technik'>"],
   "pros": ["<exactly 3 items, max 5 words each, keywords only, no sentences>"],
-  "cons": ["<exactly 3 items, max 5 words each, keywords only, no sentences>"],
-  "summary": "<max 10 words: key features present/absent, e.g. 'Furnished, sublet ok, no end date'>"
+  "cons": ["<exactly 3 items, max 5 words each, keywords only, no sentences>"]
 }
 
 Rules:
