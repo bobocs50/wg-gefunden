@@ -95,6 +95,10 @@ def _parse_card(card: Locator) -> dict | None:
     title = link.inner_text().strip() if link.count() else ""
     href = link.get_attribute("href") if link.count() else ""
     url = (BASE_URL + href) if href and href.startswith("/") else (href or "")
+    # If the URL is a search redirect (?asset_id=...) rather than a detail page,
+    # construct the canonical detail URL from the listing ID.
+    if "asset_id=" in url and id_match:
+        url = f"{BASE_URL}/wohnungen-in-Hamburg.{id_match.group()}.html"
 
     if not title or "wg-gesucht.de" not in url:
         return None  # empty card or partner ad (e.g. Wunderflats)

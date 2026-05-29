@@ -20,11 +20,11 @@ JSON schema:
 
 {
   "scam_score": <integer 1–10>,
-  "scam_reason": "<one short sentence with specific evidence>",
+  "scam_reason": "<max 6 words, specific evidence>",
   "recommendation_score": <integer 1–10>,
-  "pros": ["<2-4 short English strings>"],
-  "cons": ["<0-3 short English strings>"],
-  "summary": "<2 short English sentences>"
+  "pros": ["<exactly 3 items, max 5 words each, keywords only, no sentences>"],
+  "cons": ["<exactly 3 items, max 5 words each, keywords only, no sentences>"],
+  "summary": "<max 10 words: key features present/absent, e.g. 'Furnished, sublet ok, no end date'>"
 }
 
 Rules:

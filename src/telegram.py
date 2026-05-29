@@ -55,21 +55,21 @@ def format_listing_with_ai(listing: dict, analysis: dict) -> str:
     scam = analysis.get("scam_score", "?")
     scam_reason = analysis.get("scam_reason", "")
 
-    pros_line = " · ".join(analysis.get("pros", [])) or "—"
-    cons_line = " · ".join(analysis.get("cons", [])) or "—"
+    pros = "\n".join(f"✅ {p}" for p in analysis.get("pros", [])[:3]) or "✅ —"
+    cons = "\n".join(f"⚠️ {c}" for c in analysis.get("cons", [])[:3]) or "⚠️ —"
     summary = analysis.get("summary", "")
 
     return (
         f"{_listing_header(listing)}\n"
         f"💶 {listing.get('price_text', '?')} · 📍 {listing.get('location', '?')} · 📅 {listing.get('date_text', '?')}\n"
         f"\n"
-        f"⭐ Match: {match}/10   🚨 Scam risk: {scam}/10\n"
-        f"<i>{scam_reason}</i>\n"
+        f"⭐ {match}/10  🚨 Scam: {scam}/10 · <i>{scam_reason}</i>\n"
         f"\n"
-        f"✅ <b>Pros:</b> {pros_line}\n"
-        f"⚠️ <b>Cons:</b> {cons_line}\n"
+        f"{pros}\n"
         f"\n"
-        f"💬 <b>Summary:</b> <i>{summary}</i>\n"
+        f"{cons}\n"
+        f"\n"
+        f"🏡 <i>{summary}</i>\n"
         f"\n"
         f"🔗 <a href=\"{url}\">{url}</a>"
     )
