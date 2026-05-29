@@ -45,6 +45,8 @@ def _dates_ok(start: str, end: str) -> bool:
     start_dt = _parse_date(start)
     if not start_dt:
         return True  # no start date: pass through rather than reject blindly
+    if start_dt < AVAILABLE_FROM:
+        return False  # starts before move-in date
     if start_dt > AVAILABLE_FROM + timedelta(days=30):
         return False  # starts too late for move-in window
     end_dt = _parse_date(end)

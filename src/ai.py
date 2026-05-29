@@ -16,7 +16,7 @@ from src.config import (
     PROFILE_STRONG_PREFERENCES,
 )
 
-_REQUIRED_KEYS = {"scam_score", "scam_reason", "recommendation_score", "pros", "cons", "summary"}
+_REQUIRED_KEYS = {"scam_score", "recommendation_score"}
 
 _prompt_cache: str | None = None
 _client: genai.Client | None = None
@@ -81,14 +81,17 @@ def _build_prompt(listing: dict, detail_text: str) -> str:
 
 
 def _validate(data: dict) -> dict:
-    if not _REQUIRED_KEYS.issubset(data.keys()):
-        raise ValueError(f"Missing keys: {_REQUIRED_KEYS - data.keys()}")
+    missing = _REQUIRED_KEYS - data.keys()
+    if missing:
+        raise ValueError(f"Missing keys: {missing}")
     data["scam_score"] = max(1, min(10, int(data["scam_score"])))
     data["recommendation_score"] = max(1, min(10, int(data["recommendation_score"])))
-    if not isinstance(data["pros"], list):
+    if not isinstance(data.get("pros"), list):
         data["pros"] = []
-    if not isinstance(data["cons"], list):
+    if not isinstance(data.get("cons"), list):
         data["cons"] = []
+    data.setdefault("summary", "")
+    data.setdefault("scam_reason", "")
     return data
 
 

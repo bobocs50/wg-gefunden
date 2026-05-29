@@ -64,7 +64,7 @@ HEADLESS: bool = _bool_env("HEADLESS", True)
 
 # ─── WG-Gesucht ───────────────────────────────────────────────────────────────
 BASE_URL = "https://www.wg-gesucht.de"
-SEARCH_URL = BASE_URL + "/1-zimmer-wohnungen-und-wohnungen-und-haeuser-in-Hamburg.55.1+2+3.1.0.html"
+SEARCH_URL = BASE_URL + "/1-zimmer-wohnungen-und-wohnungen-und-haeuser-in-Hamburg.55.1+2+3.1.0.html?categories%5B%5D=1&categories%5B%5D=2&categories%5B%5D=3&rent_types%5B%5D=2&rent_types%5B%5D=1&rent_range=0%2C1000&min_rent=0&min_rent=1000&offer_filter=1&city_id=55&sort_column=1&sort_order=0&noDeact=1&dFr=1785578400&dTo=1801479600"
 
 # ─── Paths ────────────────────────────────────────────────────────────────────
 DATA_DIR = Path(os.getenv("DATA_DIR", str(ROOT_DIR / "data")))
