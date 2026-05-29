@@ -167,14 +167,19 @@ The defaults are intentionally conservative. Before deploying with AI enabled, s
 Run during active posting hours only — landlords rarely post at night.
 
 ```
-# Morning 6:30–10:00 → every 15 min
-8,23,38,53 6,7,8,9 * * * cd /root/wggefunden && venv/bin/python3 main.py >> logs/main.log 2>&1
+# All times are CEST (UTC+2) — cron runs in UTC, so subtract 2h
 
-# Lunch 12:00–14:00 → every 15 min
-11,26,41,56 12,13 * * * cd /root/wggefunden && venv/bin/python3 main.py >> logs/main.log 2>&1
+# Morning 6:30–10:00 CEST (= 4:30–8:00 UTC) → every 15 min
+8,23,38,53 4,5,6,7 * * * cd /root/wggefunden && venv/bin/python3 main.py >> logs/main.log 2>&1
 
-# Evening 17:00–23:00 → every 15 min
-14,29,44,59 17,18,19,20,21,22,23 * * * cd /root/wggefunden && venv/bin/python3 main.py >> logs/main.log 2>&1
+# Lunch 12:00–14:00 CEST (= 10:00–12:00 UTC) → every 15 min
+11,26,41,56 10,11 * * * cd /root/wggefunden && venv/bin/python3 main.py >> logs/main.log 2>&1
+
+# Evening 17:00–23:00 CEST (= 15:00–21:00 UTC) → every 15 min
+14,29,44,59 15,16,17,18,19,20,21 * * * cd /root/wggefunden && venv/bin/python3 main.py >> logs/main.log 2>&1
+
+# Daily heartbeat 07:00 CEST (= 05:00 UTC)
+0 5 * * * cd /root/wggefunden && venv/bin/python3 scripts/heartbeat.py >> logs/main.log 2>&1
 ```
 
 Each slot uses a different minute offset so runs don't align with round numbers — harder to detect as a bot. ~60 runs/day, max 180 Gemini calls.
