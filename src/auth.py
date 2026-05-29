@@ -19,8 +19,8 @@ def _session_valid() -> bool:
             page = context.new_page()
             page.goto(WGG_HOME, wait_until="domcontentloaded")
             page.wait_for_timeout(2000)
-            # Logged-in users see their inbox/profile links; the login submit button is absent
-            return page.locator("input#login_submit").count() == 0
+            # Logged-in users have the submit button hidden inside a dropdown (not visible)
+            return not page.locator("input#login_submit").is_visible()
         finally:
             browser.close()
 
@@ -54,27 +54,27 @@ def _do_login() -> bool:
             except Exception:
                 pass
 
-            # Fill and submit the login form via JS (form is in DOM but hidden inside dropdown)
+            # Open the "Mein Konto" dropdown to make the login form visible
             try:
-                page.wait_for_selector("input#login_email_username", state="attached", timeout=10000)
-                page.evaluate(f"""
-                    const e = document.querySelector('input#login_email_username');
-                    const p = document.querySelector('input#login_password');
-                    e.value = {repr(email)};
-                    ['input', 'change'].forEach(ev => e.dispatchEvent(new Event(ev, {{bubbles: true}})));
-                    p.value = {repr(password)};
-                    ['input', 'change'].forEach(ev => p.dispatchEvent(new Event(ev, {{bubbles: true}})));
-                    const form = document.querySelector('input#login_submit').closest('form');
-                    if (form) form.requestSubmit(); else document.querySelector('input#login_submit').click();
-                """)
+                page.locator("a:has-text('Mein Konto')").first.click()
+                page.wait_for_selector("input#login_email_username", state="visible", timeout=5000)
+            except Exception:
+                pass
+
+            # Fill and submit the login form
+            try:
+                page.wait_for_selector("input#login_email_username", state="visible", timeout=10000)
+                page.fill("input#login_email_username", email)
+                page.fill("input#login_password", password)
+                page.click("input#login_submit")
                 page.wait_for_load_state("domcontentloaded")
                 page.wait_for_timeout(3000)
             except Exception as e:
                 print(f"WARNING: Login failed: {e}")
                 return False
 
-            # Consider login successful if we're no longer on the login page
-            if page.locator("input#login_submit").count() > 0:
+            # Consider login successful if the submit button is no longer visible
+            if page.locator("input#login_submit").is_visible():
                 print("WARNING: Login failed — still on login page (wrong credentials?)")
                 return False
 
