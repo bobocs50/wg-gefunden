@@ -1,4 +1,6 @@
 import re
+from datetime import datetime, timezone, timedelta
+from urllib.parse import urlparse, urlencode, parse_qs, urlunparse
 
 from playwright.sync_api import sync_playwright, Page, Locator
 
@@ -16,6 +18,13 @@ def _iso_to_de(iso: str) -> str:
     """2026-08-15 → 15.08.2026"""
     y, m, d = iso.split("-")
     return f"{d}.{m}.{y}"
+
+
+def _iso_to_unix(iso_date: str) -> int:
+    """YYYY-MM-DD → Unix timestamp at midnight Germany local time (CET/CEST)."""
+    dt = datetime.strptime(iso_date, "%Y-%m-%d")
+    offset = 2 if 3 < dt.month < 10 else 1  # CEST Apr–Sep, CET Oct–Mar
+    return int(dt.replace(tzinfo=timezone(timedelta(hours=offset))).timestamp())
 
 
 def _paginated_url(base_url: str, page_index: int) -> str:
@@ -39,8 +48,6 @@ def _apply_filters(page: Page) -> str:
     Returns the URL after filters are applied (used as base for pagination).
     """
     max_rent = str(DEFAULT_MAX_RENT)
-    date_from = _iso_to_de(DEFAULT_AVAILABLE_FROM)
-    date_to = _iso_to_de(DEFAULT_AVAILABLE_UNTIL)
 
     _dismiss_cookie_banner(page)
 
@@ -65,19 +72,13 @@ def _apply_filters(page: Page) -> str:
     page.wait_for_load_state("domcontentloaded")
     page.wait_for_timeout(2000)
 
-    # Date window
-    page.locator(".hidden-xs.hidden-sm button[data-target='#extra_filters_form']").click()
-    page.wait_for_timeout(800)
-    from_el = page.locator("#date_from")
-    from_el.click(click_count=3)
-    from_el.type(date_from)
-    page.wait_for_timeout(300)
-    to_el = page.locator("#date_to")
-    to_el.click(click_count=3)
-    to_el.type(date_to)
-    page.wait_for_timeout(300)
-    page.locator("button.filter_form_submit[data-form='#extra_filters_form']").click()
-    page.wait_for_load_state("domcontentloaded")
+    # Date window — inject timestamps directly into the URL to bypass the datepicker UI
+    parsed = urlparse(page.url)
+    params = {k: v[0] for k, v in parse_qs(parsed.query, keep_blank_values=True).items()}
+    params["dFr"] = str(_iso_to_unix(DEFAULT_AVAILABLE_FROM))
+    params["dTo"] = str(_iso_to_unix(DEFAULT_AVAILABLE_UNTIL))
+    date_url = urlunparse(parsed._replace(query=urlencode(params)))
+    page.goto(date_url, wait_until="domcontentloaded")
     page.wait_for_timeout(2000)
 
     return page.url

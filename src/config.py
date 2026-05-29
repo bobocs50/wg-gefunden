@@ -45,6 +45,10 @@ PREFERRED_DISTRICTS: list[str] = [
     "langenhorn",
 ]
 
+# Listings showing only this city name (no sub-district) pass the district filter.
+# Set to "" to disable the fallback.
+DISTRICT_FALLBACK_CITY: str = "hamburg"
+
 DEFAULT_MAX_RENT: int = _int_env("MAX_RENT", 1000, minimum=1)
 DEFAULT_AVAILABLE_FROM: str = os.getenv("AVAILABLE_FROM", "2026-08-01")
 DEFAULT_AVAILABLE_UNTIL: str = os.getenv("AVAILABLE_UNTIL", "2027-02-05")

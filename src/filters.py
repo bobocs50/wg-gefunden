@@ -3,6 +3,7 @@ from datetime import datetime, timedelta
 
 from src.config import (
     PREFERRED_DISTRICTS,
+    DISTRICT_FALLBACK_CITY,
     DEFAULT_MAX_RENT,
     DEFAULT_AVAILABLE_FROM,
     DEFAULT_AVAILABLE_UNTIL,
@@ -31,7 +32,13 @@ def _price_ok(price_text: str) -> bool:
 
 def _district_ok(location: str) -> bool:
     loc = location.lower()
-    return any(d in loc for d in PREFERRED_DISTRICTS)
+    if any(d in loc for d in PREFERRED_DISTRICTS):
+        return True
+    # Pass listings with no specific district — e.g. "1-Zimmer | Hamburg | Ifflandstraße"
+    # where the city part is just the fallback city with no sub-district appended.
+    return bool(DISTRICT_FALLBACK_CITY) and any(
+        p.strip() == DISTRICT_FALLBACK_CITY for p in loc.split("|")
+    )
 
 
 def _dates_ok(start: str, end: str) -> bool:
