@@ -84,7 +84,7 @@ SEARCH_CATEGORY_INDICES: list[int] = [1, 2, 3]
 
 DEFAULT_MAX_RENT: int = _int_env("MAX_RENT", 1000, minimum=1)
 DEFAULT_AVAILABLE_FROM: str = os.getenv("AVAILABLE_FROM", "2026-08-01")
-DEFAULT_AVAILABLE_UNTIL: str = os.getenv("AVAILABLE_UNTIL", "2027-02-05")
+DEFAULT_AVAILABLE_UNTIL: str = os.getenv("AVAILABLE_UNTIL", "2027-02-01")
 
 # Listings whose landlord has been offline longer than this are filtered out.
 LAST_ONLINE_MAX_DAYS: int = 7
