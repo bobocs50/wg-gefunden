@@ -11,6 +11,7 @@ from src.config import (
     DEFAULT_AVAILABLE_FROM,
     DEFAULT_AVAILABLE_UNTIL,
     DEFAULT_MAX_RENT,
+    SEARCH_CATEGORY_INDICES,
 )
 
 
@@ -51,13 +52,18 @@ def _apply_filters(page: Page) -> str:
 
     _dismiss_cookie_banner(page)
 
-    # Deselect WG-Zimmer category if it came pre-selected
+    # Set categories to exactly SEARCH_CATEGORY_INDICES
     page.locator("button[data-id='categories']").click()
     page.wait_for_timeout(600)
-    wg_option = page.locator("ul.dropdown-menu.inner li[data-original-index='0']")
-    if wg_option.count() and "selected" in (wg_option.get_attribute("class") or ""):
-        wg_option.locator("a").click()
-        page.wait_for_timeout(300)
+    for i in range(4):
+        option = page.locator(f"ul.dropdown-menu.inner li[data-original-index='{i}']")
+        if not option.count():
+            continue
+        is_selected = "selected" in (option.get_attribute("class") or "")
+        want_selected = i in SEARCH_CATEGORY_INDICES
+        if is_selected != want_selected:
+            option.locator("a").click()
+            page.wait_for_timeout(300)
     page.keyboard.press("Escape")
     page.wait_for_timeout(500)
 

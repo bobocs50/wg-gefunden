@@ -78,6 +78,10 @@ PREFERRED_DISTRICTS: list[str] = [
 # Set to "" to disable the fallback.
 DISTRICT_FALLBACK_CITY: str = ""
 
+# Category indices to select on WG-Gesucht:
+# 0 = WG-Zimmer, 1 = 1-Zimmer-Wohnung, 2 = Wohnung, 3 = Haus
+SEARCH_CATEGORY_INDICES: list[int] = [1, 2, 3]
+
 DEFAULT_MAX_RENT: int = _int_env("MAX_RENT", 1000, minimum=1)
 DEFAULT_AVAILABLE_FROM: str = os.getenv("AVAILABLE_FROM", "2026-08-01")
 DEFAULT_AVAILABLE_UNTIL: str = os.getenv("AVAILABLE_UNTIL", "2027-02-05")
