@@ -46,8 +46,21 @@ PREFERRED_DISTRICTS: list[str] = [
     "niendorf",
     "gross borstel",
     "groß borstel",
+    "großborstel",
+    "grossborstel",
     "hummelsbüttel",
     "hummelsbuettel",
+    "eidelstedt",
+    "hoheluft-ost",
+    "hoheluft ost",
+    "sternschanze",
+    "ottensen",
+    "bahrenfeld",
+    "othmarschen",
+    "groß flottbek",
+    "gross flottbek",
+    "großflottbek",
+    "grossflottbek",
 ]
 
 # Listings showing only this city name (no sub-district) pass the district filter.
