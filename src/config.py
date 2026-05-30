@@ -61,6 +61,17 @@ PREFERRED_DISTRICTS: list[str] = [
     "gross flottbek",
     "großflottbek",
     "grossflottbek",
+    "poppenbüttel",
+    "poppenbuettel",
+    "wellingsbüttel",
+    "wellingsbuettel",
+    "barmbek-süd",
+    "barmbek-sued",
+    "hoheluft-west",
+    "hoheluft west",
+    "eimsbüttel",
+    "eimsbuettel",
+    "harvestehude",
 ]
 
 # Listings showing only this city name (no sub-district) pass the district filter.
