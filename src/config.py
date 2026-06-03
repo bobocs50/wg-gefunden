@@ -34,44 +34,44 @@ def _int_env(name: str, default: int, minimum: int | None = None) -> int:
 # A listing passes the district filter when its location string contains any of
 # these values (case-insensitive match). Add or remove districts as needed.
 PREFERRED_DISTRICTS: list[str] = [
-    "eppendorf",
-    "fuhlsbuettel",
-    "fuhlsbüttel",
-    "ohlsdorf",
-    "alsterdorf",
-    "barmbek-nord",
+    # Beste Lage
     "winterhude",
-    "lokstedt",
-    "langenhorn",
-    "niendorf",
+    "alsterdorf",
+    "eppendorf",
     "gross borstel",
     "groß borstel",
     "großborstel",
     "grossborstel",
-    "hummelsbüttel",
-    "hummelsbuettel",
-    "eidelstedt",
+
+    # Sehr gut
+    "fuhlsbuettel",
+    "fuhlsbüttel",
+    "ohlsdorf",
+    "harvestehude",
     "hoheluft-ost",
     "hoheluft ost",
-    "sternschanze",
-    "ottensen",
-    "bahrenfeld",
-    "othmarschen",
-    "groß flottbek",
-    "gross flottbek",
-    "großflottbek",
-    "grossflottbek",
-    "poppenbüttel",
-    "poppenbuettel",
-    "wellingsbüttel",
-    "wellingsbuettel",
-    "barmbek-süd",
-    "barmbek-sued",
     "hoheluft-west",
     "hoheluft west",
+
+    # Gut
+    "lokstedt",
     "eimsbüttel",
     "eimsbuettel",
-    "harvestehude",
+    "barmbek-nord",
+
+    # Noch okay
+    "barmbek-süd",
+    "barmbek-sued",
+    "niendorf",
+    "langenhorn",
+
+    # Eher nur wegen günstigerer Angebote
+    "hummelsbüttel",
+    "hummelsbuettel",
+    "wellingsbüttel",
+    "wellingsbuettel",
+    "poppenbüttel",
+    "poppenbuettel",
 ]
 
 # Listings showing only this city name (no sub-district) pass the district filter.
