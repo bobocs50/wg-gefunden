@@ -12,7 +12,7 @@ Scoring:
 - `scam_score`: 1 = very safe, 10 = almost certainly scam.
 - Raise scam score for: payment before viewing, landlord abroad/cannot show flat, external-only contact, unrealistic price, vague copy-paste text, missing address, broken machine-translated text, new/unverified profile.
 - `recommendation_score`: 1 = poor fit, 10 = apply immediately.
-- Reward: must-haves, good dates, good location/commute, furnished/sublet clarity, useful amenities, short commute to Hamburg Airport / Fuhlsbuettel.
+- Reward: must-haves, good dates, good location/commute, furnished/sublet clarity, useful amenities.
 - Penalise: missing must-have info, incompatible dates, bad commute/location, unclear furnished/sublet status.
 - If a must-have is clearly missing, recommendation score must be at most 4.
 
