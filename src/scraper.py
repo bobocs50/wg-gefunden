@@ -8,7 +8,7 @@ from src.config import MAX_DETAIL_CHARS
 # CSS selectors for the main text sections on a WG-Gesucht listing detail page.
 # Tried in order; all found sections are joined together.
 _DETAIL_SELECTORS = [
-    "#ad-description",
+    "#ad_description_text",
     "#house-description",
     "#landlord-description",
     ".panel-body",
