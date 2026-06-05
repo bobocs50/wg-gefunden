@@ -80,10 +80,11 @@ def _apply_filters(page: Page) -> str:
 
     # Date window — inject timestamps directly into the URL to bypass the datepicker UI
     parsed = urlparse(page.url)
-    params = {k: v[0] for k, v in parse_qs(parsed.query, keep_blank_values=True).items()}
-    params["dFr"] = str(_iso_to_unix(DEFAULT_AVAILABLE_FROM))
-    params["dTo"] = str(_iso_to_unix(DEFAULT_AVAILABLE_UNTIL))
-    date_url = urlunparse(parsed._replace(query=urlencode(params)))
+    # parse_qs returns lists; preserve all values (e.g. categories[]=1&categories[]=2)
+    params = parse_qs(parsed.query, keep_blank_values=True)
+    params["dFr"] = [str(_iso_to_unix(DEFAULT_AVAILABLE_FROM))]
+    params["dTo"] = [str(_iso_to_unix(DEFAULT_AVAILABLE_UNTIL))]
+    date_url = urlunparse(parsed._replace(query=urlencode(params, doseq=True)))
     page.goto(date_url, wait_until="domcontentloaded")
     page.wait_for_timeout(2000)
 
