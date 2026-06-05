@@ -70,6 +70,7 @@ def format_listing_with_ai(listing: dict, analysis: dict) -> str:
     cons = "\n".join(f"⚠️ {c}" for c in analysis.get("cons", [])[:3]) or "⚠️ —"
     summary = analysis.get("summary", "")
 
+    summary_line = f"🏡 <i>{summary}</i>\n\n" if summary else ""
     return (
         f"{_listing_header(listing)}\n"
         f"💶 {listing.get('price_text', '?')} · 📍 {listing.get('location', '?')} · 📅 {listing.get('date_text', '?')}\n"
@@ -80,7 +81,6 @@ def format_listing_with_ai(listing: dict, analysis: dict) -> str:
         f"\n"
         f"{cons}\n"
         f"\n"
-        f"🏡 <i>{summary}</i>\n"
-        f"\n"
+        f"{summary_line}"
         f"🔗 <a href=\"{url}\">{url}</a>"
     )
