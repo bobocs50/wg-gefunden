@@ -20,30 +20,29 @@ There are no tests. Use `scripts/inspect_search.py` to interactively debug the b
 
 ## Configuration
 
-- **`.env`**: secrets and runtime overrides (see `.env.example` for all supported vars)
-- **`src/config.py`**: search preferences, budget, date window, districts, crawl settings, AI model, and renter profile
-- **`prompts/listing_analysis.md`**: Gemini prompt template — `{{PROFILE}}`, `{{LISTING}}`, `{{DETAIL_TEXT}}` are injected at runtime
+- **`config.toml`**: all user-editable settings — budget, dates, districts, categories, AI flags, and renter profile. Edit this for normal customisation.
+- **`.env`**: secrets only — Telegram tokens, API keys, WG-Gesucht credentials. See `.env.example`.
+- **`src/config.py`**: thin loader; reads `config.toml` and exposes constants. Do not edit directly.
+- **`prompts/listing_analysis.md`**: Gemini prompt template — `{{PROFILE}}`, `{{LISTING}}`, `{{DETAIL_TEXT}}` are injected at runtime.
 
-Key env vars:
+Key `.env` vars:
 
 | Variable | Purpose |
 |---|---|
 | `TELEGRAM_BOT_TOKEN` / `TELEGRAM_CHAT_ID` | Push notifications |
-| `AI_ENABLED` | Set to `true` to enable Gemini analysis (default: `false`) |
-| `GEMINI_API_KEY` | Required when `AI_ENABLED=true` |
+| `GEMINI_API_KEY` | Required when `ai.enabled = true` in `config.toml` |
 | `WGG_EMAIL` / `WGG_PASSWORD` | Used by `auth.py` auto-relogin and `scripts/login.py` |
-| `MAX_AI_CALLS_PER_RUN` | Cap on Gemini calls per run (default: 3) |
-| `CRAWL_MAX_PAGES` | Pages to paginate (default: 1, ~20 listings/page) |
+| `DATA_DIR` | Override storage path (default: `./data`) |
 
 ## Architecture (`src/`)
 
 | Module | Responsibility |
 |---|---|
-| `config.py` | User-editable preferences, paths, and constants; supports env var overrides via `_bool_env`/`_int_env` |
+| `config.py` | Thin loader — reads `config.toml` using `tomllib` and exposes constants; paths and static URLs also live here |
 | `auth.py` | `ensure_session()` — validates the saved session by loading WG-Gesucht headlessly and checking for the login button; auto-relogs if expired using `WGG_EMAIL`/`WGG_PASSWORD` |
 | `crawler.py` | Playwright browser automation: loads session, applies UI filters (rent ceiling, date window, category) by clicking through the WG-Gesucht filter dropdowns, scrapes listing cards, paginates |
 | `scraper.py` | `scrape_details(urls)` — visits individual listing detail pages and extracts description text (truncated to `MAX_DETAIL_CHARS`) for AI input |
-| `filters.py` | Hard filters: type, price, district, date window, last-online recency. `run_checks()` returns per-filter results for console logging; `reject_reason()` returns the first failing filter |
+| `filters.py` | Hard filters: type, price, district, date window, last-online recency. `run_checks()` returns per-filter results for console logging |
 | `seen.py` | Reads/writes `data/seen_ids.json` — every scraped listing ID is persisted so re-runs skip already-processed listings |
 | `telegram.py` | `send(text)`, `format_listing(listing)`, `format_listing_with_ai(listing, analysis)` |
 | `ai.py` | `analyze(listing, detail_text)` — calls Gemini with a structured prompt, returns validated dict with `scam_score`, `recommendation_score`, `pros`, `cons`, `summary` |

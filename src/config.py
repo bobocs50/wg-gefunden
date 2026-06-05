@@ -1,103 +1,45 @@
 """
-User preferences for the apartment search.
-
-Edit this file for normal customization. Keep secrets such as API keys,
-Telegram tokens, and WG-Gesucht login credentials in .env.
+Configuration loader. All user settings live in config.toml at the project root.
+Secrets (Telegram tokens, API keys, WG-Gesucht credentials) stay in .env.
 """
 import os
+import tomllib
 from pathlib import Path
-
 
 ROOT_DIR = Path(__file__).resolve().parent.parent
 
 
-def _bool_env(name: str, default: bool) -> bool:
-    value = os.getenv(name)
-    if value is None:
-        return default
-    return value.strip().lower() in {"1", "true", "yes", "on"}
+def _load() -> dict:
+    with open(ROOT_DIR / "config.toml", "rb") as f:
+        return tomllib.load(f)
 
 
-def _int_env(name: str, default: int, minimum: int | None = None) -> int:
-    value = os.getenv(name)
-    if value is None:
-        return default
-    try:
-        parsed = int(value)
-    except ValueError:
-        return default
-    if minimum is not None:
-        return max(minimum, parsed)
-    return parsed
+_cfg = _load()
 
-# ─── Search Preferences ───────────────────────────────────────────────────────
-# A listing passes the district filter when its location string contains any of
-# these values (case-insensitive match). Add or remove districts as needed.
-PREFERRED_DISTRICTS: list[str] = [
-    # Beste Lage
-    "winterhude",
-    "alsterdorf",
-    "eppendorf",
-    "gross borstel",
-    "groß borstel",
-    "großborstel",
-    "grossborstel",
+# ─── Search ───────────────────────────────────────────────────────────────────
+DEFAULT_MAX_RENT: int = _cfg["search"]["max_rent"]
+DEFAULT_AVAILABLE_FROM: str = _cfg["search"]["available_from"]
+DEFAULT_AVAILABLE_UNTIL: str = _cfg["search"]["available_until"]
+SEARCH_CATEGORY_INDICES: list[int] = _cfg["search"]["categories"]
+LAST_ONLINE_MAX_DAYS: int = _cfg["search"]["last_online_max_days"]
+CRAWL_MAX_PAGES: int = _cfg["search"]["max_pages"]
+HEADLESS: bool = _cfg["search"]["headless"]
 
-    # Sehr gut
-    "fuhlsbuettel",
-    "fuhlsbüttel",
-    "ohlsdorf",
-    "harvestehude",
-    "hoheluft-ost",
-    "hoheluft ost",
-    "hoheluft-west",
-    "hoheluft west",
-
-    # Gut
-    "lokstedt",
-    "eimsbüttel",
-    "eimsbuettel",
-    "barmbek-nord",
-
-    # Noch okay
-    "barmbek-süd",
-    "barmbek-sued",
-    "niendorf",
-    "langenhorn",
-
-    # Eher nur wegen günstigerer Angebote
-    "hummelsbüttel",
-    "hummelsbuettel",
-    "wellingsbüttel",
-    "wellingsbuettel",
-    "poppenbüttel",
-    "poppenbuettel",
-]
-
-# Listings showing only this city name (no sub-district) pass the district filter.
-# Set to "" to disable the fallback.
-DISTRICT_FALLBACK_CITY: str = ""
-
-# Category indices to select on WG-Gesucht:
-# 0 = WG-Zimmer, 1 = 1-Zimmer-Wohnung, 2 = Wohnung, 3 = Haus
-SEARCH_CATEGORY_INDICES: list[int] = [1, 2, 3]
-
-DEFAULT_MAX_RENT: int = _int_env("MAX_RENT", 1000, minimum=1)
-DEFAULT_AVAILABLE_FROM: str = os.getenv("AVAILABLE_FROM", "2026-08-01")
-DEFAULT_AVAILABLE_UNTIL: str = os.getenv("AVAILABLE_UNTIL", "2027-02-01")
-
-# Listings whose landlord has been offline longer than this are filtered out.
-LAST_ONLINE_MAX_DAYS: int = 7
-
-# How many result pages to crawl per run. Each page contains roughly 20 listings.
-CRAWL_MAX_PAGES: int = _int_env("CRAWL_MAX_PAGES", 1, minimum=1)
-
-# Run Chromium in the background without opening a visible browser window.
-HEADLESS: bool = _bool_env("HEADLESS", True)
+# ─── Districts ────────────────────────────────────────────────────────────────
+PREFERRED_DISTRICTS: list[str] = [d.lower() for d in _cfg["districts"]["preferred"]]
+DISTRICT_FALLBACK_CITY: str = _cfg["districts"].get("fallback_city", "").lower()
 
 # ─── WG-Gesucht ───────────────────────────────────────────────────────────────
 BASE_URL = "https://www.wg-gesucht.de"
-SEARCH_URL = BASE_URL + "/1-zimmer-wohnungen-und-wohnungen-und-haeuser-in-Hamburg.55.1+2+3.1.0.html?categories%5B%5D=1&categories%5B%5D=2&categories%5B%5D=3&rent_types%5B%5D=2&rent_types%5B%5D=1&rent_range=0%2C1000&min_rent=0&min_rent=1000&offer_filter=1&city_id=55&sort_column=1&sort_order=0&noDeact=1&dFr=1785578400&dTo=1801479600"
+SEARCH_URL = (
+    BASE_URL
+    + "/1-zimmer-wohnungen-und-wohnungen-und-haeuser-in-Hamburg.55.1+2+3.1.0.html"
+    "?categories%5B%5D=1&categories%5B%5D=2&categories%5B%5D=3"
+    "&rent_types%5B%5D=2&rent_types%5B%5D=1"
+    "&rent_range=0%2C1000&min_rent=0&min_rent=1000"
+    "&offer_filter=1&city_id=55&sort_column=1&sort_order=0&noDeact=1"
+    "&dFr=1785578400&dTo=1801479600"
+)
 
 # ─── Paths ────────────────────────────────────────────────────────────────────
 DATA_DIR = Path(os.getenv("DATA_DIR", str(ROOT_DIR / "data")))
@@ -105,36 +47,16 @@ SEEN_IDS_FILE = DATA_DIR / "seen_ids.json"
 SESSION_FILE = DATA_DIR / "session.json"
 
 # ─── AI ───────────────────────────────────────────────────────────────────────
-AI_ENABLED: bool = _bool_env("AI_ENABLED", False)
-GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
+AI_ENABLED: bool = _cfg["ai"]["enabled"]
+GEMINI_MODEL: str = _cfg["ai"]["model"]
 AI_PROMPT_FILE = ROOT_DIR / "prompts" / "listing_analysis.md"
+MAX_AI_CALLS_PER_RUN: int = _cfg["ai"]["max_calls_per_run"]
+MAX_DETAIL_CHARS: int = _cfg["ai"]["max_detail_chars"]
+MAX_OUTPUT_TOKENS: int = _cfg["ai"]["max_output_tokens"]
 
-# Per run: scrape and summarize at most this many matching listings with AI.
-# Extra matches still get basic Telegram alerts.
-MAX_AI_CALLS_PER_RUN: int = _int_env("MAX_AI_CALLS_PER_RUN", 3, minimum=0)
-MAX_DETAIL_CHARS: int = _int_env("MAX_DETAIL_CHARS", 2500, minimum=0)
-MAX_OUTPUT_TOKENS: int = _int_env("MAX_OUTPUT_TOKENS", 400, minimum=1)
-
-# This profile is inserted into prompts/listing_analysis.md at {{PROFILE}}.
-PROFILE_NAME = "Apartment seeker"
-PROFILE_CONTEXT = (
-    "Starting a 5-month internship at Lufthansa Technik Hamburg in September 2026. "
-    "Lufthansa Technik is near Hamburg Airport/Fuhlsbuettel, so commute time matters. "
-    "Needs a sublet from August 2026 through the end of January 2027."
-)
-PROFILE_MUST_HAVES: list[str] = [
-    "Furnished, because they do not own furniture",
-    "Sublet is allowed",
-    "Available for the requested date window",
-]
-PROFILE_STRONG_PREFERENCES: list[str] = [
-    "Quiet neighbourhood",
-    "Short commute to Fuhlsbuettel",
-    "Good public transport",
-]
-PROFILE_NICE_TO_HAVES: list[str] = [
-    "Natural light",
-    "Balcony",
-    "Washing machine",
-    "Fast internet",
-]
+# ─── Profile ──────────────────────────────────────────────────────────────────
+PROFILE_NAME: str = _cfg["profile"]["name"]
+PROFILE_CONTEXT: str = _cfg["profile"]["context"].strip()
+PROFILE_MUST_HAVES: list[str] = _cfg["profile"]["must_haves"]
+PROFILE_STRONG_PREFERENCES: list[str] = _cfg["profile"]["strong_preferences"]
+PROFILE_NICE_TO_HAVES: list[str] = _cfg["profile"]["nice_to_haves"]

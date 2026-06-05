@@ -1,0 +1,95 @@
+# WG-Gesucht search configuration
+# Edit this file to change search preferences, budget, districts, and AI settings.
+# Secrets (Telegram tokens, API keys, WG-Gesucht credentials) go in .env — never here.
+
+[search]
+max_rent = 1000
+available_from = "2026-08-01"
+available_until = "2027-02-01"
+# Category indices: 0=WG-Zimmer, 1=1-Zimmer-Wohnung, 2=Wohnung, 3=Haus
+categories = [1, 2, 3]
+# Listings whose landlord has been offline longer than this are filtered out.
+last_online_max_days = 7
+# Pages to paginate per run (~20 listings per page).
+max_pages = 1
+headless = true
+
+[districts]
+# A listing passes when its location string contains any of these values (case-insensitive).
+# Set fallback_city to pass listings with no sub-district (e.g. "Hamburg | Ifflandstraße").
+# Leave empty to keep the strict district check.
+fallback_city = ""
+preferred = [
+    # Beste Lage
+    "winterhude",
+    "alsterdorf",
+    "eppendorf",
+    "gross borstel",
+    "groß borstel",
+    "großborstel",
+    "grossborstel",
+
+    # Sehr gut
+    "fuhlsbuettel",
+    "fuhlsbüttel",
+    "ohlsdorf",
+    "harvestehude",
+    "hoheluft-ost",
+    "hoheluft ost",
+    "hoheluft-west",
+    "hoheluft west",
+
+    # Gut
+    "lokstedt",
+    "eimsbüttel",
+    "eimsbuettel",
+    "barmbek-nord",
+
+    # Noch okay
+    "barmbek-süd",
+    "barmbek-sued",
+    "niendorf",
+    "langenhorn",
+
+    # Eher nur wegen günstigerer Angebote
+    "hummelsbüttel",
+    "hummelsbuettel",
+    "wellingsbüttel",
+    "wellingsbuettel",
+    "poppenbüttel",
+    "poppenbuettel",
+]
+
+[ai]
+enabled = false
+model = "gemini-2.5-flash"
+# Per run: scrape and analyse at most this many matching listings with AI.
+# Extra matches still get basic Telegram alerts.
+max_calls_per_run = 3
+max_detail_chars = 2500
+max_output_tokens = 400
+
+[profile]
+# Inserted into prompts/listing_analysis.md at {{PROFILE}}.
+name = "Apartment seeker"
+context = """
+Starting a 5-month internship at Lufthansa Technik Hamburg in September 2026.
+Lufthansa Technik is near Hamburg Airport/Fuhlsbuettel, so commute time matters.
+Needs a sublet from August 2026 through the end of January 2027.
+"""
+must_haves = [
+    "Furnished, because they do not own furniture",
+    "Sublet is allowed",
+    "Available for the requested date window",
+]
+strong_preferences = [
+    "Quiet neighbourhood",
+    "Short commute to Fuhlsbuettel",
+    "Good public transport",
+]
+nice_to_haves = [
+    "Natural light",
+    "Balcony",
+    "Washing machine",
+    "Fast internet",
+]
