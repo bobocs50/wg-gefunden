@@ -12,6 +12,9 @@ from src.config import (
     DEFAULT_AVAILABLE_UNTIL,
     DEFAULT_MAX_RENT,
     SEARCH_CATEGORY_INDICES,
+    SEARCH_WG,
+    WG_SIZE_MAX,
+    WG_FLATSHARE_TYPES,
     CRAWL_MAX_PAGES,
     HEADLESS,
 )
@@ -86,6 +89,10 @@ def _apply_filters(page: Page) -> str:
     params = parse_qs(parsed.query, keep_blank_values=True)
     params["dFr"] = [str(_iso_to_unix(DEFAULT_AVAILABLE_FROM))]
     params["dTo"] = [str(_iso_to_unix(DEFAULT_AVAILABLE_UNTIL))]
+    if SEARCH_WG and WG_SIZE_MAX > 0:
+        params["wg_flatmates_to"] = [str(WG_SIZE_MAX)]
+    if SEARCH_WG and WG_FLATSHARE_TYPES:
+        params["flatshare_types[]"] = WG_FLATSHARE_TYPES
     date_url = urlunparse(parsed._replace(query=urlencode(params, doseq=True)))
     page.goto(date_url, wait_until="domcontentloaded")
     page.wait_for_timeout(2000)
@@ -104,10 +111,8 @@ def _parse_card(card: Locator) -> dict | None:
     title = link.inner_text().strip() if link.count() else ""
     href = link.get_attribute("href") if link.count() else ""
     url = (BASE_URL + href) if href and href.startswith("/") else (href or "")
-    # If the URL is a search redirect (?asset_id=...) rather than a detail page,
-    # construct the canonical detail URL from the listing ID.
-    if "asset_id=" in url and id_match:
-        url = f"{BASE_URL}/wohnungen-in-Hamburg.{id_match.group()}.html"
+    # If the URL is a search redirect (?asset_id=...), keep it as-is —
+    # Playwright will follow the redirect to the real listing page.
 
     if not title or "wg-gesucht.de" not in url:
         return None  # empty card or partner ad (e.g. Wunderflats)
@@ -125,6 +130,9 @@ def _parse_card(card: Locator) -> dict | None:
     online_text = online_el.inner_text().strip() if online_el.count() else ""
     online_match = re.search(r'Online:\s*(\d{2}\.\d{2}\.\d{4})', online_text)
 
+    type_el = card.locator("[data-filter-value]").first
+    wg_type_code = type_el.get_attribute("data-filter-value") if type_el.count() else ""
+
     date_parts = re.findall(r'\d{2}\.\d{2}\.\d{4}', date_text)
     return {
         "id": id_match.group(),
@@ -136,6 +144,7 @@ def _parse_card(card: Locator) -> dict | None:
         "date_end": date_parts[1] if len(date_parts) > 1 else "",
         "last_online": online_match.group(1) if online_match else "",
         "url": url,
+        "wg_type_code": wg_type_code or "",
     }
 
 

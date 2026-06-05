@@ -20,7 +20,12 @@ _cfg = _load()
 DEFAULT_MAX_RENT: int = _cfg["search"]["max_rent"]
 DEFAULT_AVAILABLE_FROM: str = _cfg["search"]["available_from"]
 DEFAULT_AVAILABLE_UNTIL: str = _cfg["search"]["available_until"]
-SEARCH_CATEGORY_INDICES: list[int] = _cfg["search"]["categories"]
+SEARCH_APARTMENTS: bool = _cfg["search"]["search_apartments"]
+SEARCH_WG: bool = _cfg["search"]["search_wg"]
+_apartment_cats: list[int] = _cfg["search"]["categories"]
+SEARCH_CATEGORY_INDICES: list[int] = (
+    ([0] if SEARCH_WG else []) + (_apartment_cats if SEARCH_APARTMENTS else [])
+)
 LAST_ONLINE_MAX_DAYS: int = _cfg["search"]["last_online_max_days"]
 CRAWL_MAX_PAGES: int = _cfg["search"]["max_pages"]
 HEADLESS: bool = _cfg["search"]["headless"]
@@ -29,17 +34,13 @@ HEADLESS: bool = _cfg["search"]["headless"]
 PREFERRED_DISTRICTS: list[str] = [d.lower() for d in _cfg["districts"]["preferred"]]
 DISTRICT_FALLBACK_CITY: str = _cfg["districts"].get("fallback_city", "").lower()
 
+# ─── WG filters ──────────────────────────────────────────────────────────────
+WG_SIZE_MAX: int = _cfg["wg"]["wg_size_max"]
+WG_FLATSHARE_TYPES: list[str] = _cfg["wg"]["flatshare_types"]
+
 # ─── WG-Gesucht ───────────────────────────────────────────────────────────────
 BASE_URL = "https://www.wg-gesucht.de"
-SEARCH_URL = (
-    BASE_URL
-    + "/1-zimmer-wohnungen-und-wohnungen-und-haeuser-in-Hamburg.55.1+2+3.1.0.html"
-    "?categories%5B%5D=1&categories%5B%5D=2&categories%5B%5D=3"
-    "&rent_types%5B%5D=2&rent_types%5B%5D=1"
-    "&rent_range=0%2C1000&min_rent=0&min_rent=1000"
-    "&offer_filter=1&city_id=55&sort_column=1&sort_order=0&noDeact=1"
-    "&dFr=1785578400&dTo=1801479600"
-)
+SEARCH_URL: str = _cfg["search"]["url"]
 
 # ─── Paths ────────────────────────────────────────────────────────────────────
 DATA_DIR = Path(os.getenv("DATA_DIR", str(ROOT_DIR / "data")))

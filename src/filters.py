@@ -8,6 +8,8 @@ from src.config import (
     DEFAULT_AVAILABLE_FROM,
     DEFAULT_AVAILABLE_UNTIL,
     LAST_ONLINE_MAX_DAYS,
+    WG_SIZE_MAX,
+    WG_FLATSHARE_TYPES,
 )
 
 MAX_RENT = DEFAULT_MAX_RENT
@@ -62,22 +64,38 @@ def _last_online_ok(last_online: str) -> bool:
     return not dt or (datetime.now() - dt).days <= LAST_ONLINE_MAX_DAYS
 
 
-def _type_ok(url: str) -> bool:
-    return "/wg-zimmer-in-" not in url
+def _wg_size_ok(location: str) -> bool:
+    if WG_SIZE_MAX == 0:
+        return True
+    m = re.search(r'(\d+)er WG', location, re.IGNORECASE)
+    if not m:
+        return True
+    return int(m.group(1)) <= WG_SIZE_MAX
+
+
+def _wg_type_ok(wg_type_code: str) -> bool:
+    if not WG_FLATSHARE_TYPES or not wg_type_code:
+        return True
+    return wg_type_code in WG_FLATSHARE_TYPES
 
 
 def run_checks(listing: dict) -> list[tuple[str, str, bool]]:
     """Returns per-filter (name, display_value, passed) tuples for console reporting."""
-    url = listing.get("url", "")
     price_text = listing.get("price_text", "0")
     location = listing.get("location", "")
     d_start = listing.get("date_start", "")
     d_end = listing.get("date_end", "")
     last_online = listing.get("last_online", "")
-    return [
-        ("type",     "flatshare" if not _type_ok(url) else "ok", _type_ok(url)),
+    wg_type_code = listing.get("wg_type_code", "")
+    checks = [
         ("price",    price_text,                                  _price_ok(price_text)),
         ("district", location[:45].strip(),                       _district_ok(location)),
         ("dates",    f"{d_start} – {d_end}" if d_start else "?", _dates_ok(d_start, d_end)),
         ("online",   last_online or "unknown",                    _last_online_ok(last_online)),
     ]
+    if wg_type_code:
+        checks += [
+            ("wg_size", location[:45].strip(), _wg_size_ok(location)),
+            ("wg_type", wg_type_code,          _wg_type_ok(wg_type_code)),
+        ]
+    return checks
