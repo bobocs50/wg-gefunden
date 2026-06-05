@@ -76,11 +76,11 @@ def format_listing_with_ai(listing: dict, analysis: dict) -> str:
         f"💶 {listing.get('price_text', '?')} · 📍 {listing.get('location', '?')} · 📅 {listing.get('date_text', '?')}\n"
         f"\n"
         f"⭐ {match}/10  🚨 Scam: {scam}/10 · <i>{scam_reason}</i>\n"
-        f"{facts_line}"
         f"\n"
         f"{pros}\n"
         f"\n"
         f"{cons}\n"
+        f"{facts_line}"
         f"\n"
         f"🔗 <a href=\"{url}\">{url}</a>"
     )
