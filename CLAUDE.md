@@ -72,7 +72,7 @@ main.py
 - **Session reuse**: `data/session.json` is Playwright storage state, loaded on every run. `ensure_session()` validates it headlessly before crawling; if expired and credentials are set, it auto-relogs.
 - **Seen ID dedup**: All listings per page are marked seen after each run regardless of whether they matched. A listing triggers a notification at most once.
 - **UI filters**: Rent ceiling and date window are clicked through in the browser before scraping — they affect WG-Gesucht server-side results. Python filters are a second safety net.
-- **Date window logic**: Listing must start by `DEFAULT_AVAILABLE_FROM + 30 days` (move-in window) and end at or after `DEFAULT_AVAILABLE_UNTIL`. Open-ended listings (no end date) pass if the start is on time.
+- **Date window logic**: Listing's start date must fall between `move_in_from` and `move_in_to` (both inclusive). These map directly to WG-Gesucht's frühestes/spätestes Einzugsdatum filters.
 - **District filter known limitation**: The filter checks the location string on the search result card. Listings that show only a generic `Hamburg` or a street name (e.g. `Hamburg | Ifflandstraße`) are rejected even if the detail page is in a preferred district.
 - **AI cap**: The first `MAX_AI_CALLS_PER_RUN` matches get Gemini analysis; remaining matches get a basic Telegram alert without analysis.
 

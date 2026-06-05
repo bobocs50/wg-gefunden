@@ -8,8 +8,8 @@
 # at runtime — the URL just needs to point at the right city.
 url = "https://www.wg-gesucht.de/1-zimmer-wohnungen-und-wohnungen-und-haeuser-in-Hamburg.55.1+2+3.1.0.html?categories%5B%5D=1&categories%5B%5D=2&categories%5B%5D=3&rent_types%5B%5D=2&rent_types%5B%5D=1&rent_range=0%2C1000&min_rent=0&min_rent=1000&offer_filter=1&city_id=55&sort_column=1&sort_order=0&noDeact=1&dFr=1785578400&dTo=1801479600"
 max_rent = 1000
-available_from = "2026-08-01"
-available_until = "2027-02-05"
+move_in_from = "2026-08-01"
+move_in_to   = "2026-09-01"
 # Toggle which listing types to search for. Both can be true at once.
 search_apartments = true
 search_wg = false

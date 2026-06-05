@@ -8,8 +8,8 @@ from src.browser import authenticated_page
 from src.config import (
     BASE_URL,
     SEARCH_URL,
-    DEFAULT_AVAILABLE_FROM,
-    DEFAULT_AVAILABLE_UNTIL,
+    MOVE_IN_FROM,
+    MOVE_IN_TO,
     DEFAULT_MAX_RENT,
     SEARCH_CATEGORY_INDICES,
     SEARCH_WG,
@@ -105,8 +105,8 @@ def _apply_filters(page: Page) -> str:
     parsed = urlparse(page.url)
     # parse_qs returns lists; preserve all values (e.g. categories[]=1&categories[]=2)
     params = parse_qs(parsed.query, keep_blank_values=True)
-    params["dFr"] = [str(_iso_to_unix(DEFAULT_AVAILABLE_FROM))]
-    params["dTo"] = [str(_iso_to_unix(DEFAULT_AVAILABLE_UNTIL))]
+    params["dFr"] = [str(_iso_to_unix(MOVE_IN_FROM))]
+    params["dTo"] = [str(_iso_to_unix(MOVE_IN_TO))]
     if SEARCH_WG and WG_SIZE_MAX > 0:
         params["wg_flatmates_to"] = [str(WG_SIZE_MAX)]
     if SEARCH_WG and WG_FLATSHARE_TYPES:

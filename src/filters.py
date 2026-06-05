@@ -1,20 +1,20 @@
 import re
-from datetime import datetime, timedelta
+from datetime import datetime
 
 from src.config import (
     PREFERRED_DISTRICTS,
     DISTRICT_FALLBACK_CITY,
     DEFAULT_MAX_RENT,
-    DEFAULT_AVAILABLE_FROM,
-    DEFAULT_AVAILABLE_UNTIL,
+    MOVE_IN_FROM,
+    MOVE_IN_TO,
     LAST_ONLINE_MAX_DAYS,
     WG_SIZE_MAX,
     WG_FLATSHARE_TYPES,
 )
 
 MAX_RENT = DEFAULT_MAX_RENT
-AVAILABLE_FROM = datetime.strptime(DEFAULT_AVAILABLE_FROM, "%Y-%m-%d")
-AVAILABLE_UNTIL = datetime.strptime(DEFAULT_AVAILABLE_UNTIL, "%Y-%m-%d")
+EARLIEST_MOVE_IN = datetime.strptime(MOVE_IN_FROM, "%Y-%m-%d")
+LATEST_MOVE_IN = datetime.strptime(MOVE_IN_TO, "%Y-%m-%d")
 
 
 def _parse_date(value: str) -> datetime | None:
@@ -43,18 +43,11 @@ def _district_ok(location: str) -> bool:
     )
 
 
-def _dates_ok(start: str, end: str) -> bool:
+def _dates_ok(start: str) -> bool:
     start_dt = _parse_date(start)
     if not start_dt:
         return True  # no start date: pass through rather than reject blindly
-    if start_dt < AVAILABLE_FROM:
-        return False  # starts before move-in date
-    if start_dt > AVAILABLE_FROM + timedelta(days=30):
-        return False  # starts too late for move-in window
-    end_dt = _parse_date(end)
-    if not end_dt:
-        return True  # open-ended contract: assume long-term, good enough
-    return end_dt >= AVAILABLE_UNTIL
+    return EARLIEST_MOVE_IN <= start_dt <= LATEST_MOVE_IN
 
 
 def _last_online_ok(last_online: str) -> bool:
@@ -90,7 +83,7 @@ def run_checks(listing: dict) -> list[tuple[str, str, bool]]:
     checks = [
         ("price",    price_text,                                  _price_ok(price_text)),
         ("district", location[:45].strip(),                       _district_ok(location)),
-        ("dates",    f"{d_start} – {d_end}" if d_start else "?", _dates_ok(d_start, d_end)),
+        ("dates",    f"{d_start} – {d_end}" if d_start else "?", _dates_ok(d_start)),
         ("online",   last_online or "unknown",                    _last_online_ok(last_online)),
     ]
     if wg_type_code:

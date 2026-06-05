@@ -19,10 +19,11 @@
 | Step | Behavior |
 |---|---|
 | Crawl | Opens WG-Gesucht with Playwright and applies the search UI filters. |
-| Filter | Checks rent, district, availability window, and landlord activity. |
+| Filter | Checks rent, district, availability window, landlord activity, and (for WG rooms) flatshare type and size. |
 | Deduplicate | Skips listings already saved in `data/seen_ids.json`. |
 | Notify | Sends Telegram alerts for fresh matches. |
-| Analyze | Optionally sends up to `MAX_AI_CALLS_PER_RUN` matches to Gemini. |
+| Analyze | Optionally sends up to `max_calls_per_run` matches to Gemini. |
+| Heartbeat | Daily Telegram report via `scripts/heartbeat.py` summarising the last 24 h of runs. |
 
 ## Quick Start
 
@@ -34,7 +35,7 @@ playwright install chromium
 cp .env.example .env
 ```
 
-Then fill in `.env` with your own values. Keep that file local.
+Then fill in `.env` with your secrets. Keep that file local.
 
 ## First Login
 
@@ -54,13 +55,14 @@ python main.py
 
 Each run follows the same pipeline:
 
-1. Loads your saved session.
+1. Validates (and refreshes) your saved session.
 2. Applies WG-Gesucht search filters in the browser.
-3. Crawls `CRAWL_MAX_PAGES` pages.
+3. Crawls `max_pages` pages.
 4. Skips listings already stored in `data/seen_ids.json`.
-5. Checks price, district, dates, and last-online recency.
+5. Checks price, district, dates, last-online recency, and (for WG rooms) flatshare type and size.
 6. Sends Telegram alerts for new matches.
-7. Optionally sends up to `MAX_AI_CALLS_PER_RUN` matches to Gemini.
+7. Optionally sends up to `max_calls_per_run` matches to Gemini.
+8. Appends run stats to `data/stats.json`.
 
 Example console flow:
 
@@ -80,6 +82,48 @@ Filters applied — https://www.wg-gesucht.de/...
 
 ## Configuration
 
+All search preferences, budget, districts, and AI settings live in **`config.toml`**. Secrets live in **`.env`**.
+
+### `config.toml`
+
+```toml
+[search]
+url           = "https://www.wg-gesucht.de/..."  # base search URL (rent/dates overridden at runtime)
+max_rent      = 1000
+move_in_from = "2026-08-01"  # frühestes Einzugsdatum
+move_in_to   = "2026-09-01"  # spätestes Einzugsdatum
+search_apartments = true   # include 1-Zimmer, Wohnung, Haus
+search_wg         = false  # include WG-Zimmer
+categories        = [1, 2, 3]  # 1=1-Zimmer, 2=Wohnung, 3=Haus
+last_online_max_days = 7
+max_pages  = 1
+headless   = true
+
+[districts]
+preferred      = ["winterhude", "eppendorf", ...]
+fallback_city  = ""  # set to "Hamburg" to pass listings with no sub-district
+
+[wg]
+wg_size_max     = 3          # max flatmates; 0 = no limit
+flatshare_types = ["2", "12"]  # 2=Frauen-WG, 12=gemischte WG (empty = accept all)
+
+[ai]
+enabled           = true
+model             = "gemini-2.5-flash"
+max_calls_per_run = 3
+max_detail_chars  = 2500
+max_output_tokens = 400
+
+[profile]
+name    = "Apartment seeker"
+context = "..."       # inserted into the Gemini prompt
+must_haves         = [...]
+strong_preferences = [...]
+nice_to_haves      = [...]
+```
+
+WG type codes for `flatshare_types`: `2`=Frauen-WG, `12`=gemischte WG, `3`=Männer-WG, `1`=Studenten-WG, `4`=Business-WG, `5`=Wohnheim, `6`=Berufstätigen-WG, `7`=Azubi-WG, `9`=WG mit Kindern, `16`=LGBTQIA+, `19`=Internationals welcome, `23`=keine Angaben.
+
 ### `.env`
 
 ```env
@@ -87,45 +131,27 @@ Filters applied — https://www.wg-gesucht.de/...
 TELEGRAM_BOT_TOKEN=
 TELEGRAM_CHAT_ID=
 
-# AI
-AI_ENABLED=false
-MAX_AI_CALLS_PER_RUN=3
-MAX_DETAIL_CHARS=2500
-MAX_OUTPUT_TOKENS=400
+# Gemini (only needed when ai.enabled = true in config.toml)
 GEMINI_API_KEY=
 
-# Crawl safety
-CRAWL_MAX_PAGES=1
-
-# Filters
-MAX_RENT=1000
-AVAILABLE_FROM=YYYY-MM-DD
-AVAILABLE_UNTIL=YYYY-MM-DD
-
-# WG-Gesucht login
+# WG-Gesucht credentials (for auto-relogin and scripts/login.py)
 WGG_EMAIL=
 WGG_PASSWORD=
+
+# Persistent storage path (default: ./data — override on cloud to a mounted volume)
+# DATA_DIR=/mnt/data
 ```
-
-### Key Defaults
-
-| Setting | Default | Why |
-|---|---|---|
-| `AI_ENABLED` | `false` | Zero Gemini usage until you opt in. |
-| `MAX_AI_CALLS_PER_RUN` | `3` | Caps AI work per run. |
-| `MAX_DETAIL_CHARS` | `2500` | Keeps the prompt compact. |
-| `MAX_OUTPUT_TOKENS` | `400` | JSON summaries do not need more. |
-| `CRAWL_MAX_PAGES` | `1` | Keeps cost and risk low. |
 
 ## What Gets Filtered
 
 Before AI ever runs, a listing must pass these checks:
 
 - Not already seen.
-- Price at or below `MAX_RENT`.
-- Location matches one of the preferred districts in `src/config.py`.
+- Price at or below `max_rent`.
+- Location matches one of the preferred districts in `config.toml`.
 - Start and end dates fit your availability window.
-- Landlord was online recently enough.
+- Landlord was online within `last_online_max_days`.
+- For WG rooms: flatshare type is in `flatshare_types` (if set) and size ≤ `wg_size_max` (if set).
 
 Only listings that pass all of that can reach Gemini.
 
@@ -133,17 +159,17 @@ Only listings that pass all of that can reach Gemini.
 
 AI is only used when all of these are true:
 
-- `AI_ENABLED=true` in `.env`.
-- `GEMINI_API_KEY` is set.
+- `ai.enabled = true` in `config.toml`.
+- `GEMINI_API_KEY` is set in `.env`.
 - The listing is new.
 - The listing passes all local filters.
-- The listing is within the first `MAX_AI_CALLS_PER_RUN` matches for that run.
+- The listing is within the first `max_calls_per_run` matches for that run.
 
 If there are more matches than the cap, they still get basic Telegram alerts without AI analysis.
 
 ## Cost Controls
 
-The defaults are intentionally conservative. Before deploying with AI enabled, set a billing budget and alert in Google Cloud or AI Studio.
+The defaults are intentionally conservative. Before deploying with AI enabled, set a billing budget and alert in Google AI Studio.
 
 ## Deployment
 
@@ -156,11 +182,11 @@ The defaults are intentionally conservative. Before deploying with AI enabled, s
 ### Cloud
 
 - Store `GEMINI_API_KEY`, `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID`, `WGG_EMAIL`, and `WGG_PASSWORD` as secrets.
-- Keep `AI_ENABLED=false` for the first deployment run.
-- Keep `CRAWL_MAX_PAGES=1` unless you explicitly want more crawl load.
-- Set a billing budget and alert before turning AI on.
+- Set `ai.enabled = false` for the first deployment run.
+- Keep `max_pages = 1` unless you explicitly want more crawl load.
+- Set a billing budget before turning AI on.
 - Do not log full listing text or prompt payloads.
-- Set `DATA_DIR=/path/to/persistent/volume` so `session.json` and `seen_ids.json` survive between runs.
+- Set `DATA_DIR=/path/to/persistent/volume` so `session.json`, `seen_ids.json`, and `stats.json` survive between runs.
 
 ### Cron Schedule (recommended)
 
@@ -182,13 +208,13 @@ Run during active posting hours only — landlords rarely post at night.
 0 5 * * * cd /root/wggefunden && venv/bin/python3 scripts/heartbeat.py >> logs/main.log 2>&1
 ```
 
-Each slot uses a different minute offset so runs don't align with round numbers — harder to detect as a bot. ~60 runs/day, max 180 Gemini calls.
+Each slot uses a different minute offset so runs don't align with round numbers. ~60 runs/day, max 180 Gemini calls.
 
 Setup on the server:
 
 ```bash
 mkdir -p /root/wggefunden/logs
-crontab -e   # paste the 3 lines above
+crontab -e   # paste the lines above
 ```
 
 ### Server Tips (Hetzner / Ubuntu)
@@ -207,9 +233,6 @@ tail -f /root/wggefunden/logs/main.log
 
 # Check disk usage (seen_ids.json grows over time, stays small)
 du -sh /root/wggefunden/data/
-
-# Restart server without losing cron jobs
-reboot   # cron jobs survive reboots automatically
 ```
 
 ## Safety
@@ -224,24 +247,29 @@ reboot   # cron jobs survive reboots automatically
 
 - If the browser fails to start, reinstall Chromium with `playwright install chromium`.
 - If `main.py` exits before crawling, run `python scripts/login.py` again to refresh the session.
-- If AI never runs, check `AI_ENABLED=true` and `GEMINI_API_KEY` in `.env`.
-- If matches look wrong, edit the filters in `src/config.py`.
+- If AI never runs, check `ai.enabled = true` and `GEMINI_API_KEY` in `.env`.
+- If matches look wrong, adjust filters in `config.toml`.
+- If the daily heartbeat reports no runs, check `systemctl status cron` and the cron log.
 
 ## Repository Map
 
 ```text
 main.py                       Main run loop
-src/config.py                 Search, AI, and safety settings
-src/crawler.py                Playwright crawler and search filters
-src/filters.py                Local hard filters
-src/scraper.py                Detail-page text scraping for AI
+config.toml                   All search preferences, budget, districts, AI, and profile settings
+src/config.py                 Thin loader — reads config.toml and exposes constants
+src/browser.py                Shared Playwright context managers (authenticated_page, fresh_page)
+src/auth.py                   Session validation and auto-relogin
+src/crawler.py                Playwright crawler and search filter UI automation
+src/filters.py                Local hard filters (price, district, dates, online recency, WG type)
+src/scraper.py                Detail-page text scraping for AI input
 src/ai.py                     Gemini JSON analysis
 src/telegram.py               Telegram formatting and sending
-src/seen.py                   Seen-list persistence
+src/seen.py                   Seen-list persistence (data/seen_ids.json)
+src/stats.py                  Run metrics persistence (data/stats.json)
 scripts/login.py              One-time WG-Gesucht login/session setup
+scripts/heartbeat.py          Daily Telegram report summarising the last 24 h of runs
 scripts/inspect_search.py     Search/debug helper
 prompts/listing_analysis.md   Gemini prompt template
-notes/cloud_safety.md         Deployment safety checklist
 ```
 
 ## Validation
