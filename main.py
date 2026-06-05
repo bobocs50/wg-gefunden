@@ -1,3 +1,5 @@
+import os
+import sys
 from concurrent.futures import ThreadPoolExecutor
 
 from dotenv import load_dotenv
@@ -15,7 +17,23 @@ from src.telegram import send, format_listing, format_listing_with_ai
 from src.stats import record_run
 
 
+def _validate_env() -> None:
+    missing = []
+    for var in ("TELEGRAM_BOT_TOKEN", "TELEGRAM_CHAT_ID"):
+        if not os.getenv(var):
+            missing.append(var)
+    if AI_ENABLED and not os.getenv("GEMINI_API_KEY"):
+        missing.append("GEMINI_API_KEY  (required when ai.enabled = true in config.toml)")
+    if missing:
+        print("ERROR: Missing required environment variables:")
+        for v in missing:
+            print(f"  • {v}")
+        print("Copy .env.example to .env and fill in the missing values.")
+        sys.exit(1)
+
+
 def main():
+    _validate_env()
     errors: list[str] = []
     ai_calls = 0
 

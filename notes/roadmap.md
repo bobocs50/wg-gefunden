@@ -42,7 +42,4 @@
 
 > Friction points for a new user setting this up from scratch.
 
-- [ ] Add a `scripts/setup.py` that walks through config interactively and writes `.env`
-- [ ] Add startup config validation — warn clearly if required fields (`TELEGRAM_BOT_TOKEN`, etc.) are missing instead of crashing mid-run
-- [ ] Add a note in README / config explaining how to look up `CITY_ID` from a WG-Gesucht URL
-- [ ] Add district examples for common German cities (Berlin, Munich, Frankfurt, Cologne) as commented-out blocks in `config.py`
+- [x] Add startup config validation — warn clearly if required fields (`TELEGRAM_BOT_TOKEN`, etc.) are missing instead of crashing mid-run
