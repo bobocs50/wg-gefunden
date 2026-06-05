@@ -76,6 +76,12 @@ main.py
 - **District filter known limitation**: The filter checks the location string on the search result card. Listings that show only a generic `Hamburg` or a street name (e.g. `Hamburg | Ifflandstraße`) are rejected even if the detail page is in a preferred district.
 - **AI cap**: The first `MAX_AI_CALLS_PER_RUN` matches get Gemini analysis; remaining matches get a basic Telegram alert without analysis.
 
+## Deployment
+
+- **Server**: `root@89.167.7.44`, repo at `/root/wggefunden`
+- **Deploy**: `git push origin main && ssh root@89.167.7.44 "cd /root/wggefunden && git pull"`
+- Always push and pull on the server after every commit — no need to ask.
+
 ## MVP Phases
 
 - **v1** ✅ crawl + hard filter + Telegram alerts + AI analysis (Gemini)
