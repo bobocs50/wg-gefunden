@@ -92,6 +92,8 @@ def _validate(data: dict) -> dict:
         data["cons"] = []
     data.setdefault("summary", "")
     data.setdefault("scam_reason", "")
+    if not isinstance(data.get("summary"), str):
+        data["summary"] = ""
     return data
 
 

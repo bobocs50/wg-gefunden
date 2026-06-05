@@ -68,20 +68,27 @@ def format_listing_with_ai(listing: dict, analysis: dict) -> str:
 
     pros = "\n".join(f"✅ {p}" for p in analysis.get("pros", [])[:3]) or "✅ —"
     cons = "\n".join(f"⚠️ {c}" for c in analysis.get("cons", [])[:3]) or "⚠️ —"
-    key_facts = "\n".join(f"• {f}" for f in analysis.get("key_facts", [])[:3])
+    summary = analysis.get("summary", "")
 
-    facts_line = f"\n{key_facts}\n" if key_facts else ""
+    location = listing.get('location', '?')
+    location_parts = [p.strip() for p in location.split("|")]
+    location_short = " · ".join(location_parts[1:]) if len(location_parts) > 1 else location
+
+    scam_line = f"<i>{scam_reason}</i>\n" if scam_reason else ""
+    summary_line = f"\n💬 <i>{summary}</i>\n" if summary else ""
+
     return (
         f"{_listing_header(listing)}\n"
-        f"💶 {listing.get('price_text', '?')}  📅 {listing.get('date_text', '?')}\n"
-        f"📍 {listing.get('location', '?')}\n"
+        f"💶 {listing.get('price_text', '?')}  ·  📅 {listing.get('date_text', '?')}\n"
+        f"📍 {location_short}\n"
         f"\n"
-        f"⭐ <b>{match}/10</b>  🚨 <b>{scam}/10</b>  <i>{scam_reason}</i>\n"
+        f"⭐ Match: <b>{match}/10</b>  ·  🚨 Scam: <b>{scam}/10</b>\n"
+        f"{scam_line}"
         f"\n"
         f"{pros}\n"
         f"\n"
         f"{cons}\n"
-        f"{facts_line}"
+        f"{summary_line}"
         f"\n"
         f"🔗 <a href=\"{url}\">{url}</a>"
     )

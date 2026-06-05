@@ -22,9 +22,9 @@ JSON schema:
   "scam_score": <integer 1–10>,
   "scam_reason": "<max 6 words, specific evidence>",
   "recommendation_score": <integer 1–10>,
-  "key_facts": ["<exactly 3 items: the most critical facts for a quick 80/20 read — pack in as much useful detail as fits naturally, e.g. 'Furnished sublet Aug 1–Jan 31 confirmed', '1-room apt, ~25 sqm, washing machine in building', 'Fuhlsbüttel district, ~10 min bike to Lufthansa Technik'>"],
   "pros": ["<exactly 3 items, max 5 words each, keywords only, no sentences>"],
-  "cons": ["<exactly 3 items, max 5 words each, keywords only, no sentences>"]
+  "cons": ["<exactly 3 items, max 5 words each, keywords only, no sentences>"],
+  "summary": "<max 10 words, keywords only, the 2-3 most critical facts e.g. 'Furnished · Aug–Oct only · no registration'>"
 }
 
 Rules:
