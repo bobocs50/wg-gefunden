@@ -38,18 +38,18 @@
 - [x] Test end-to-end: crawl → filter → message received
 
 ### Scheduling
-- [ ] Set up cron job (every 10–15 min)
-- [ ] Test unattended runs
+- [x] Set up cron job (every 15 min)
+- [x] Test unattended runs
 
 ---
 
 ## v2 – AI Layer
 
-- [ ] Integrate Gemini SDK
-- [ ] Write evaluation prompt (score, scam check, pros/cons)
-- [ ] Parse AI response reliably
-- [ ] Add AI score + summary to Telegram message
-- [ ] Scam warning if detected
+- [x] Integrate Gemini SDK
+- [x] Write evaluation prompt (score, scam check, pros/cons)
+- [x] Parse AI response reliably
+- [x] Add AI score + summary to Telegram message
+- [x] Scam warning if detected
 - [ ] Only notify if score ≥ threshold (configurable)
 
 ---
@@ -65,9 +65,20 @@
 
 ## Deployment – Hetzner VPS
 
-- [ ] Rent Hetzner CX22 (~€3.79/mo)
-- [ ] SSH in, install Python + Playwright + Chromium
-- [ ] Upload code + `.env`
-- [ ] Run `login.py` on server to generate session
-- [ ] Set up cron job on server
-- [ ] Monitor logs
+- [x] Rent Hetzner CX22 (~€3.79/mo)
+- [x] SSH in, install Python + Playwright + Chromium
+- [x] Upload code + `.env`
+- [x] Run `login.py` on server to generate session
+- [x] Set up cron job on server
+- [x] Monitor logs
+
+---
+
+## Architecture / Technical Debt
+
+- [ ] **Shared browser module** — extract `src/browser.py` with a single `authenticated_page()` context manager; eliminate the three independent Playwright setups in `auth.py`, `crawler.py`, and `scraper.py` that each duplicate session loading and cookie-banner dismissal
+- [ ] **Consolidate filter logic** — make `run_checks()` in `filters.py` the single source of truth; reduce `reject_reason()` to a one-liner that delegates to it (adding a filter currently requires editing both functions)
+- [ ] **Move renter profile out of config** — `PROFILE_*` constants in `config.py` belong to the AI layer; move them to `profiles/default.toml` so the profile can be swapped without touching search preferences
+- [ ] **Atomic seen-ID writes + early persistence** — write `seen_ids.json` immediately after crawl (not at the very end of main), and use a temp-file + `os.replace()` rename to prevent JSON corruption on mid-write crashes
+- [ ] **Surface Telegram send failures** — `send()` return value is currently ignored at all 4 call sites; log a warning and retry once so a Telegram outage is visible in logs rather than silently looking like zero matches
+- [ ] **Fix district false negatives** — listings that show only `Hamburg | Ifflandstraße` (no sub-district) are rejected even if the detail page is in a preferred district; consider fetching the detail page to verify district before rejecting
