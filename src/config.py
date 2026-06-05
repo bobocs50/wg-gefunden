@@ -23,6 +23,7 @@ DEFAULT_AVAILABLE_UNTIL: str = _cfg["search"]["available_until"]
 SEARCH_APARTMENTS: bool = _cfg["search"]["search_apartments"]
 SEARCH_WG: bool = _cfg["search"]["search_wg"]
 FURNISHED_ONLY: bool = _cfg["search"]["furnished_only"]
+PETS_ALLOWED: bool = _cfg["search"]["pets_allowed"]
 _apartment_cats: list[int] = _cfg["search"]["categories"]
 SEARCH_CATEGORY_INDICES: list[int] = (
     ([0] if SEARCH_WG else []) + (_apartment_cats if SEARCH_APARTMENTS else [])

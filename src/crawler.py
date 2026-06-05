@@ -16,6 +16,7 @@ from src.config import (
     WG_SIZE_MAX,
     WG_FLATSHARE_TYPES,
     FURNISHED_ONLY,
+    PETS_ALLOWED,
     CRAWL_MAX_PAGES,
     HEADLESS,
 )
@@ -76,6 +77,14 @@ def _apply_filters(page: Page) -> str:
     # Furnished filter — index 0=egal, 1=Ja, 2=Nein
     if FURNISHED_ONLY:
         page.locator("button[data-id='furnished']").click()
+        page.wait_for_timeout(400)
+        page.locator("ul.dropdown-menu.inner li[data-original-index='1']").locator("a").click()
+        page.keyboard.press("Escape")
+        page.wait_for_timeout(500)
+
+    # Pets allowed filter — index 0=egal, 1=Ja, 2=Nein
+    if PETS_ALLOWED:
+        page.locator("button[data-id='pets_allowed']").click()
         page.wait_for_timeout(400)
         page.locator("ul.dropdown-menu.inner li[data-original-index='1']").locator("a").click()
         page.keyboard.press("Escape")

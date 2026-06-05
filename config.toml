@@ -15,6 +15,8 @@ search_apartments = true
 search_wg = false
 # Only show furnished listings (möbliert). false = show all.
 furnished_only = false
+# Only show listings where pets are allowed. false = show all.
+pets_allowed = false
 # Apartment category indices included when search_apartments = true.
 # 1=1-Zimmer-Wohnung, 2=Wohnung, 3=Haus  (0=WG-Zimmer is controlled by search_wg)
 categories = [1, 2, 3]
