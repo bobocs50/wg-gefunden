@@ -18,7 +18,13 @@ def _session_valid() -> bool:
             context = browser.new_context(storage_state=str(SESSION_FILE))
             page = context.new_page()
             page.goto(WGG_HOME, wait_until="domcontentloaded")
-            page.wait_for_timeout(2000)
+            page.wait_for_timeout(3500)
+            # Dismiss cookie banner so it doesn't obscure the login button check
+            try:
+                page.click("a.cmptxt_btn_yes", timeout=3000)
+                page.wait_for_timeout(1000)
+            except Exception:
+                pass
             # Logged-in users have the submit button hidden inside a dropdown (not visible)
             return not page.locator("input#login_submit").is_visible()
         finally:

@@ -16,7 +16,9 @@ from src.telegram import send, format_listing, format_listing_with_ai
 
 def main():
     if not ensure_session():
-        print("ERROR: Could not establish a valid session — aborting")
+        msg = "ERROR: Could not establish a valid session — aborting"
+        print(msg)
+        send(f"🔐 *WG-Gesucht bot login failed*\n\nCould not log in after session expired. Bot is not running. Check credentials or re-run `scripts/login.py` on the server.")
         return
     seen = load_seen()
     try:
