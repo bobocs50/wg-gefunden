@@ -73,9 +73,10 @@ def format_listing_with_ai(listing: dict, analysis: dict) -> str:
     facts_line = f"\n{key_facts}\n" if key_facts else ""
     return (
         f"{_listing_header(listing)}\n"
-        f"💶 {listing.get('price_text', '?')} · 📍 {listing.get('location', '?')} · 📅 {listing.get('date_text', '?')}\n"
+        f"💶 {listing.get('price_text', '?')}  📅 {listing.get('date_text', '?')}\n"
+        f"📍 {listing.get('location', '?')}\n"
         f"\n"
-        f"⭐ {match}/10  🚨 Scam: {scam}/10 · <i>{scam_reason}</i>\n"
+        f"⭐ <b>{match}/10</b>  🚨 <b>{scam}/10</b>  <i>{scam_reason}</i>\n"
         f"\n"
         f"{pros}\n"
         f"\n"
