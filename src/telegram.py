@@ -68,19 +68,19 @@ def format_listing_with_ai(listing: dict, analysis: dict) -> str:
 
     pros = "\n".join(f"✅ {p}" for p in analysis.get("pros", [])[:3]) or "✅ —"
     cons = "\n".join(f"⚠️ {c}" for c in analysis.get("cons", [])[:3]) or "⚠️ —"
-    summary = analysis.get("summary", "")
+    key_facts = "\n".join(f"• {f}" for f in analysis.get("key_facts", [])[:3])
 
-    summary_line = f"🏡 <i>{summary}</i>\n\n" if summary else ""
+    facts_line = f"\n{key_facts}\n" if key_facts else ""
     return (
         f"{_listing_header(listing)}\n"
         f"💶 {listing.get('price_text', '?')} · 📍 {listing.get('location', '?')} · 📅 {listing.get('date_text', '?')}\n"
         f"\n"
         f"⭐ {match}/10  🚨 Scam: {scam}/10 · <i>{scam_reason}</i>\n"
+        f"{facts_line}"
         f"\n"
         f"{pros}\n"
         f"\n"
         f"{cons}\n"
         f"\n"
-        f"{summary_line}"
         f"🔗 <a href=\"{url}\">{url}</a>"
     )
