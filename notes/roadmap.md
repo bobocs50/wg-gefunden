@@ -30,12 +30,8 @@
 
 > These filters are either hardcoded or not exposed at all.
 
-- [ ] Add `MIN_RENT` — filter out suspiciously cheap listings (scam signal), env-var overridable
 - [ ] Add `MIN_SIZE_M2` / `MAX_SIZE_M2` — apartment size in m² (currently not filtered at all)
-- [ ] Add `FURNISHED_ONLY` boolean — hard filter, not just an AI preference
-- [ ] Add `MOVE_IN_WINDOW_DAYS` — how many days after `AVAILABLE_FROM` a listing can still start (currently hardcoded to 30)
-- [ ] Make `LAST_ONLINE_MAX_DAYS` overridable via env var (currently only in `config.py`)
-- [ ] Add `RENT_TYPE` — `"warm"` / `"cold"` / `"both"` (currently hardcoded to both in `SEARCH_URL`)
+- [x] Make `LAST_ONLINE_MAX_DAYS` into toml file — already done (`last_online_max_days = 7` in `config.toml`)
 
 
 ## 6. Onboarding & usability
