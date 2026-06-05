@@ -1,16 +1,13 @@
 import json
 import os
+import time
 import urllib.request
 
 BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "")
 CHAT_ID = os.getenv("TELEGRAM_CHAT_ID", "")
 
 
-def send(text: str) -> bool:
-    if not BOT_TOKEN or not CHAT_ID:
-        print("WARNING: Telegram not configured — skipping notification")
-        return False
-
+def _send_once(text: str) -> bool:
     payload = json.dumps({
         "chat_id": CHAT_ID,
         "text": text,
@@ -32,6 +29,20 @@ def send(text: str) -> bool:
     except Exception as e:
         print(f"Telegram error: {e}")
         return False
+
+
+def send(text: str) -> bool:
+    if not BOT_TOKEN or not CHAT_ID:
+        print("WARNING: Telegram not configured — skipping notification")
+        return False
+    if _send_once(text):
+        return True
+    print("WARNING: Telegram send failed — retrying in 3s...")
+    time.sleep(3)
+    if _send_once(text):
+        return True
+    print("WARNING: Telegram send failed after retry — message dropped")
+    return False
 
 
 def _listing_header(listing: dict) -> str:

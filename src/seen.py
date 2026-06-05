@@ -1,4 +1,5 @@
 import json
+import os
 
 from src.config import SEEN_IDS_FILE
 
@@ -11,10 +12,6 @@ def load_seen() -> set[str]:
 
 def save_seen(ids: set[str]) -> None:
     SEEN_IDS_FILE.parent.mkdir(parents=True, exist_ok=True)
-    SEEN_IDS_FILE.write_text(json.dumps(sorted(ids), indent=2))
-
-
-def mark_seen(existing: set[str], new_ids: list[str]) -> set[str]:
-    existing.update(new_ids)
-    save_seen(existing)
-    return existing
+    tmp = SEEN_IDS_FILE.with_suffix(".tmp")
+    tmp.write_text(json.dumps(sorted(ids), indent=2))
+    os.replace(tmp, SEEN_IDS_FILE)

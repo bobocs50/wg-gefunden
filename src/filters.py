@@ -62,21 +62,6 @@ def _last_online_ok(last_online: str) -> bool:
     return not dt or (datetime.now() - dt).days <= LAST_ONLINE_MAX_DAYS
 
 
-def reject_reason(listing: dict) -> str | None:
-    """Returns a short description of the first failing filter, or None if the listing passes all."""
-    if "/wg-zimmer-in-" in listing.get("url", ""):
-        return "flatshare (WG-Zimmer)"
-    if not _price_ok(listing.get("price_text", "0")):
-        return f"price ({listing.get('price_text', '?')})"
-    if not _district_ok(listing.get("location", "")):
-        return f"district ({listing.get('location', '?')[:40].strip()})"
-    if not _dates_ok(listing.get("date_start", ""), listing.get("date_end", "")):
-        return f"dates ({listing.get('date_start', '?')} – {listing.get('date_end', '?')})"
-    if not _last_online_ok(listing.get("last_online", "")):
-        return f"inactive (online: {listing.get('last_online', '?')})"
-    return None
-
-
 def _type_ok(url: str) -> bool:
     return "/wg-zimmer-in-" not in url
 

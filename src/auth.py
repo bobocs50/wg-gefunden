@@ -73,10 +73,15 @@ def _do_login() -> bool:
         return True
 
 
-def ensure_session() -> bool:
-    """Ensure a valid session file exists before crawling. Re-logins automatically if expired."""
+def ensure_session() -> tuple[bool, bool]:
+    """Ensure a valid session file exists before crawling. Re-logins automatically if expired.
+
+    Returns (ok, relogged): ok=False means the bot cannot run;
+    relogged=True means a fresh login was performed (session had expired).
+    """
     if SESSION_FILE.exists() and _session_valid():
         print("Session valid.")
-        return True
+        return True, False
     print("Session missing or expired — re-logging in...")
-    return _do_login()
+    ok = _do_login()
+    return ok, ok
