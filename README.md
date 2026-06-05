@@ -72,7 +72,6 @@ Filters applied — https://www.wg-gesucht.de/...
   page 1: 8 listings
 
   Helle Wohnung in Hamburg
-    ✓ type       ok
     ✓ price      1000 €
     ✓ district   1-Zimmer-Wohnung | Hamburg | ...
     ✓ dates      01.08.2026 –
@@ -93,8 +92,10 @@ max_rent      = 1000
 move_in_from = "2026-08-01"  # frühestes Einzugsdatum
 move_in_to   = "2026-09-01"  # spätestes Einzugsdatum
 search_apartments = true   # include 1-Zimmer, Wohnung, Haus
-search_wg         = false  # include WG-Zimmer
-categories        = [1, 2, 3]  # 1=1-Zimmer, 2=Wohnung, 3=Haus
+search_wg         = false  # include WG-Zimmer (activates [wg] filters below)
+furnished_only    = false  # true = only show furnished (möbliert) listings
+pets_allowed      = false  # true = only show listings where pets are allowed
+categories        = [1, 2, 3]  # apartment types when search_apartments=true: 1=1-Zimmer, 2=Wohnung, 3=Haus
 last_online_max_days = 7
 max_pages  = 1
 headless   = true
@@ -104,8 +105,23 @@ preferred      = ["winterhude", "eppendorf", ...]
 fallback_city  = ""  # set to "Hamburg" to pass listings with no sub-district
 
 [wg]
-wg_size_max     = 3          # max flatmates; 0 = no limit
-flatshare_types = ["2", "12"]  # 2=Frauen-WG, 12=gemischte WG (empty = accept all)
+wg_size_max = 3   # max number of people in the WG; 0 = no limit
+
+# Accepted flatshare types — empty list = accept all types.
+# Available codes:
+#  2 = Frauen-WG (women-only)
+# 12 = gemischte WG (mixed)
+#  3 = Männer-WG (men-only)
+#  1 = Studenten-WG
+#  4 = Business-WG
+#  5 = Wohnheim (dorm)
+#  6 = Berufstätigen-WG
+#  7 = Azubi-WG
+#  9 = WG mit Kindern
+# 16 = LGBTQIA+
+# 19 = Internationals welcome
+# 23 = keine Angaben zum Geschlecht
+flatshare_types = ["2", "12"]
 
 [ai]
 enabled           = true
@@ -121,8 +137,6 @@ must_haves         = [...]
 strong_preferences = [...]
 nice_to_haves      = [...]
 ```
-
-WG type codes for `flatshare_types`: `2`=Frauen-WG, `12`=gemischte WG, `3`=Männer-WG, `1`=Studenten-WG, `4`=Business-WG, `5`=Wohnheim, `6`=Berufstätigen-WG, `7`=Azubi-WG, `9`=WG mit Kindern, `16`=LGBTQIA+, `19`=Internationals welcome, `23`=keine Angaben.
 
 ### `.env`
 
