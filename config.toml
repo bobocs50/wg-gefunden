@@ -5,7 +5,7 @@
 [search]
 max_rent = 1000
 available_from = "2026-08-01"
-available_until = "2027-02-01"
+available_until = "2027-02-05"
 # Category indices: 0=WG-Zimmer, 1=1-Zimmer-Wohnung, 2=Wohnung, 3=Haus
 categories = [1, 2, 3]
 # Listings whose landlord has been offline longer than this are filtered out.
@@ -61,7 +61,7 @@ preferred = [
 ]
 
 [ai]
-enabled = false
+enabled = true
 model = "gemini-2.5-flash"
 # Per run: scrape and analyse at most this many matching listings with AI.
 # Extra matches still get basic Telegram alerts.
