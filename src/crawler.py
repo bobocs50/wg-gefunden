@@ -2,16 +2,18 @@ import re
 from datetime import datetime, timezone, timedelta
 from urllib.parse import urlparse, urlencode, parse_qs, urlunparse
 
-from playwright.sync_api import sync_playwright, Page, Locator
+from playwright.sync_api import Page, Locator
 
+from src.browser import authenticated_page
 from src.config import (
     BASE_URL,
     SEARCH_URL,
-    SESSION_FILE,
     DEFAULT_AVAILABLE_FROM,
     DEFAULT_AVAILABLE_UNTIL,
     DEFAULT_MAX_RENT,
     SEARCH_CATEGORY_INDICES,
+    CRAWL_MAX_PAGES,
+    HEADLESS,
 )
 
 
@@ -144,22 +146,10 @@ def _scrape_page(page: Page) -> list[dict]:
     return [listing for card in cards if (listing := _parse_card(card))]
 
 
-def crawl(max_pages: int = 3, headless: bool = False) -> list[dict]:
+def crawl(max_pages: int = CRAWL_MAX_PAGES, headless: bool = HEADLESS) -> list[dict]:
     all_listings: list[dict] = []
 
-    with sync_playwright() as p:
-        browser = p.chromium.launch(
-            headless=headless,
-            args=["--no-sandbox", "--disable-setuid-sandbox"],
-        )
-        if SESSION_FILE.exists():
-            context = browser.new_context(storage_state=str(SESSION_FILE))
-        else:
-            context = browser.new_context()
-            print("WARNING: No session file — crawling without login")
-
-        page = context.new_page()
-        page.set_viewport_size({"width": 1280, "height": 900})
+    with authenticated_page(headless=headless) as page:
         page.goto(SEARCH_URL, wait_until="domcontentloaded")
         page.wait_for_timeout(1500)
 
@@ -175,7 +165,5 @@ def crawl(max_pages: int = 3, headless: bool = False) -> list[dict]:
             if not listings:
                 break
             all_listings.extend(listings)
-
-        browser.close()
 
     return all_listings

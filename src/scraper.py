@@ -1,8 +1,9 @@
 import re
 
-from playwright.sync_api import sync_playwright, Page
+from playwright.sync_api import Page
 
-from src.config import SESSION_FILE, MAX_DETAIL_CHARS
+from src.browser import authenticated_page
+from src.config import MAX_DETAIL_CHARS
 
 # CSS selectors for the main text sections on a WG-Gesucht listing detail page.
 # Tried in order; all found sections are joined together.
@@ -39,19 +40,7 @@ def scrape_details(urls: list[str]) -> dict[str, str]:
     """
     results: dict[str, str] = {}
 
-    with sync_playwright() as p:
-        browser = p.chromium.launch(
-            headless=True,
-            args=["--no-sandbox", "--disable-setuid-sandbox"],
-        )
-        context = (
-            browser.new_context(storage_state=str(SESSION_FILE))
-            if SESSION_FILE.exists()
-            else browser.new_context()
-        )
-        page = context.new_page()
-        page.set_viewport_size({"width": 1280, "height": 900})
-
+    with authenticated_page(headless=True) as page:
         for url in urls:
             try:
                 page.goto(url, wait_until="domcontentloaded", timeout=15000)
@@ -62,7 +51,5 @@ def scrape_details(urls: list[str]) -> dict[str, str]:
             except Exception as e:
                 print(f"  scrape failed ({e}) — {url}")
                 results[url] = ""
-
-        browser.close()
 
     return results
