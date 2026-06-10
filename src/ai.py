@@ -7,6 +7,8 @@ from google.genai import types
 
 from src.config import (
     AI_PROMPT_FILE,
+    APPLICATION_DRAFT_PROMPT_FILE,
+    APPLICATION_TEMPLATE_FILE,
     GEMINI_MODEL,
     MAX_OUTPUT_TOKENS,
     PROFILE_CONTEXT,
@@ -19,6 +21,8 @@ from src.config import (
 _REQUIRED_KEYS = {"scam_score", "recommendation_score"}
 
 _prompt_cache: str | None = None
+_application_draft_cache: str | None = None
+_application_template_cache: str | None = None
 _client: genai.Client | None = None
 _client_lock = threading.Lock()
 
@@ -28,6 +32,20 @@ def _load_prompt() -> str:
     if _prompt_cache is None:
         _prompt_cache = AI_PROMPT_FILE.read_text(encoding="utf-8")
     return _prompt_cache
+
+
+def _load_application_draft() -> str:
+    global _application_draft_cache
+    if _application_draft_cache is None:
+        _application_draft_cache = APPLICATION_DRAFT_PROMPT_FILE.read_text(encoding="utf-8")
+    return _application_draft_cache
+
+
+def _load_application_template() -> str:
+    global _application_template_cache
+    if _application_template_cache is None:
+        _application_template_cache = APPLICATION_TEMPLATE_FILE.read_text(encoding="utf-8")
+    return _application_template_cache
 
 
 def _bullet_list(items: list[str]) -> str:
@@ -117,4 +135,40 @@ def analyze(listing: dict, detail_text: str) -> dict | None:
         return _validate(data)
     except Exception as e:
         print(f"Gemini error: {e}")
+        return None
+
+
+def draft_application(listing: dict, detail_text: str) -> str | None:
+    """Call Gemini to fill in the application message template. Returns plain text, or None on failure."""
+    if not os.getenv("GEMINI_API_KEY"):
+        return None
+
+    listing_block = (
+        f"Title: {listing.get('title', '?')}\n"
+        f"Price: {listing.get('price_text', '?')}\n"
+        f"Location: {listing.get('location', '?')}\n"
+        f"Dates: {listing.get('date_start', '?')} – {listing.get('date_end', '?')}"
+    )
+    detail_block = detail_text if detail_text else "(kein Detailtext verfügbar)"
+
+    prompt = (
+        _load_application_draft()
+        .replace("{{APPLICATION_TEMPLATE}}", _load_application_template())
+        .replace("{{LISTING}}", listing_block)
+        .replace("{{DETAIL_TEXT}}", detail_block)
+    )
+
+    try:
+        response = _get_client().models.generate_content(
+            model=GEMINI_MODEL,
+            contents=prompt,
+            config=types.GenerateContentConfig(
+                max_output_tokens=MAX_OUTPUT_TOKENS,
+                thinking_config=types.ThinkingConfig(thinking_budget=0),
+            ),
+        )
+        text = response.text.strip()
+        return text if text else None
+    except Exception as e:
+        print(f"Gemini application draft error: {e}")
         return None

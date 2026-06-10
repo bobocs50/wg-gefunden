@@ -12,7 +12,7 @@ from src.crawler import crawl
 from src.filters import run_checks
 from src.seen import load_seen, save_seen
 from src.scraper import scrape_details
-from src.ai import analyze
+from src.ai import analyze, draft_application
 from src.telegram import send, format_listing, format_listing_with_ai
 from src.stats import record_run
 
@@ -120,6 +120,9 @@ def main():
                         send(format_listing_with_ai(match, analysis))
                     else:
                         send(format_listing(match))
+                    draft = draft_application(match, details.get(match["url"], ""))
+                    if draft:
+                        send(draft)
 
             for match in basic_matches:
                 send(format_listing(match))
