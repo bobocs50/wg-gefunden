@@ -7,6 +7,7 @@ from src.config import (
     DEFAULT_MAX_RENT,
     MOVE_IN_FROM,
     MOVE_IN_TO,
+    STAY_UNTIL,
     LAST_ONLINE_MAX_DAYS,
     WG_SIZE_MAX,
     WG_FLATSHARE_TYPES,
@@ -15,6 +16,7 @@ from src.config import (
 MAX_RENT = DEFAULT_MAX_RENT
 EARLIEST_MOVE_IN = datetime.strptime(MOVE_IN_FROM, "%Y-%m-%d")
 LATEST_MOVE_IN = datetime.strptime(MOVE_IN_TO, "%Y-%m-%d")
+MIN_END_DATE = datetime.strptime(STAY_UNTIL, "%Y-%m-%d")
 
 
 def _parse_date(value: str) -> datetime | None:
@@ -48,6 +50,13 @@ def _dates_ok(start: str) -> bool:
     if not start_dt:
         return True  # no start date: pass through rather than reject blindly
     return EARLIEST_MOVE_IN <= start_dt <= LATEST_MOVE_IN
+
+
+def _end_date_ok(end: str) -> bool:
+    end_dt = _parse_date(end)
+    if not end_dt:
+        return True  # open-ended listing: pass through
+    return end_dt >= MIN_END_DATE
 
 
 def _last_online_ok(last_online: str) -> bool:
@@ -84,6 +93,7 @@ def run_checks(listing: dict) -> list[tuple[str, str, bool]]:
         ("price",    price_text,                                  _price_ok(price_text)),
         ("district", location[:45].strip(),                       _district_ok(location)),
         ("dates",    f"{d_start} – {d_end}" if d_start else "?", _dates_ok(d_start)),
+        ("end_date", d_end or "open",                             _end_date_ok(d_end)),
         ("online",   last_online or "unknown",                    _last_online_ok(last_online)),
     ]
     if wg_type_code:

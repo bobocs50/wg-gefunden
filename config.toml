@@ -10,6 +10,8 @@ url = "https://www.wg-gesucht.de/1-zimmer-wohnungen-und-wohnungen-und-haeuser-in
 max_rent = 1000
 move_in_from = "2026-08-01"
 move_in_to   = "2027-02-01"
+# Listings whose end date is before this are rejected (open-ended listings always pass).
+stay_until   = "2027-01-31"
 # Toggle which listing types to search for. Both can be true at once.
 search_apartments = true
 search_wg = false

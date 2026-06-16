@@ -20,6 +20,7 @@ _cfg = _load()
 DEFAULT_MAX_RENT: int = _cfg["search"]["max_rent"]
 MOVE_IN_FROM: str = _cfg["search"]["move_in_from"]
 MOVE_IN_TO: str = _cfg["search"]["move_in_to"]
+STAY_UNTIL: str = _cfg["search"]["stay_until"]
 SEARCH_APARTMENTS: bool = _cfg["search"]["search_apartments"]
 SEARCH_WG: bool = _cfg["search"]["search_wg"]
 FURNISHED_ONLY: bool = _cfg["search"]["furnished_only"]
