@@ -66,7 +66,7 @@ Produce:
 - **summary**: one short keyword line (e.g. "Furnished · Eppendorf · Aug–Jan · good commute")
 - **dates_ok**: true/false — does the availability window cover Aug 2026–Feb 2027?
 
-Only send a notification if `recommendation_score ≥ 4` and `scam_score ≤ 6`.
+Only send a notification if `recommendation_score ≥ 4` and `scam_score ≤ 3`.
 
 ## Step 6 — Send Telegram notification
 
