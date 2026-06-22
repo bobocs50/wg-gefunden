@@ -20,6 +20,7 @@ from src.config import (
     CRAWL_MAX_PAGES,
     HEADLESS,
 )
+from src.listing import Listing
 
 
 def _iso_to_de(iso: str) -> str:
@@ -118,8 +119,8 @@ def _apply_filters(page: Page) -> str:
     return page.url
 
 
-def _parse_card(card: Locator) -> dict | None:
-    """Extract a listing dict from a search result card. Returns None for ads or empty cards."""
+def _parse_card(card: Locator) -> Listing | None:
+    """Extract a Listing from a search result card. Returns None for ads or empty cards."""
     card_id = card.get_attribute("id") or ""
     id_match = re.search(r'\d+$', card_id)
     if not id_match:
@@ -152,29 +153,29 @@ def _parse_card(card: Locator) -> dict | None:
     wg_type_code = type_el.get_attribute("data-filter-value") if type_el.count() else ""
 
     date_parts = re.findall(r'\d{2}\.\d{2}\.\d{4}', date_text)
-    return {
-        "id": id_match.group(),
-        "title": title,
-        "price_text": price_text,
-        "location": location,
-        "date_text": date_text,
-        "date_start": date_parts[0] if len(date_parts) > 0 else "",
-        "date_end": date_parts[1] if len(date_parts) > 1 else "",
-        "last_online": online_match.group(1) if online_match else "",
-        "url": url,
-        "wg_type_code": wg_type_code or "",
-    }
+    return Listing(
+        id=id_match.group(),
+        title=title,
+        price_text=price_text,
+        location=location,
+        date_text=date_text,
+        date_start=date_parts[0] if len(date_parts) > 0 else "",
+        date_end=date_parts[1] if len(date_parts) > 1 else "",
+        last_online=online_match.group(1) if online_match else "",
+        url=url,
+        wg_type_code=wg_type_code or "",
+    )
 
 
-def _scrape_page(page: Page) -> list[dict]:
+def _scrape_page(page: Page) -> list[Listing]:
     page.wait_for_load_state("domcontentloaded")
     page.wait_for_timeout(1500)
     cards = page.locator("div[id^='liste-details-ad-']").all()
     return [listing for card in cards if (listing := _parse_card(card))]
 
 
-def crawl(max_pages: int = CRAWL_MAX_PAGES, headless: bool = HEADLESS) -> list[dict]:
-    all_listings: list[dict] = []
+def crawl(max_pages: int = CRAWL_MAX_PAGES, headless: bool = HEADLESS) -> list[Listing]:
+    all_listings: list[Listing] = []
 
     with authenticated_page(headless=headless) as page:
         page.goto(SEARCH_URL, wait_until="domcontentloaded")

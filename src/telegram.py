@@ -3,6 +3,8 @@ import os
 import time
 import urllib.request
 
+from src.listing import Listing
+
 BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "")
 CHAT_ID = os.getenv("TELEGRAM_CHAT_ID", "")
 
@@ -45,23 +47,21 @@ def send(text: str) -> bool:
     return False
 
 
-def _listing_header(listing: dict) -> str:
-    return f"🏠 <b>{listing.get('title', '?')}</b>"
+def _listing_header(listing: Listing) -> str:
+    return f"🏠 <b>{listing.title}</b>"
 
 
-def format_listing(listing: dict) -> str:
-    url = listing.get("url", "")
+def format_listing(listing: Listing) -> str:
     return (
         f"{_listing_header(listing)}\n"
-        f"💶 {listing.get('price_text', '?')}\n"
-        f"📍 {listing.get('location', '?')}\n"
-        f"📅 {listing.get('date_text', '?')}\n"
-        f"🔗 <a href=\"{url}\">{url}</a>"
+        f"💶 {listing.price_text}\n"
+        f"📍 {listing.location}\n"
+        f"📅 {listing.date_text}\n"
+        f"🔗 <a href=\"{listing.url}\">{listing.url}</a>"
     )
 
 
-def format_listing_with_ai(listing: dict, analysis: dict) -> str:
-    url = listing.get("url", "")
+def format_listing_with_ai(listing: Listing, analysis: dict) -> str:
     match = analysis.get("recommendation_score", "?")
     scam = analysis.get("scam_score", "?")
     scam_reason = analysis.get("scam_reason", "")
@@ -70,16 +70,15 @@ def format_listing_with_ai(listing: dict, analysis: dict) -> str:
     cons = "\n".join(f"⚠️ {c}" for c in analysis.get("cons", [])[:3]) or "⚠️ —"
     summary = analysis.get("summary", "")
 
-    location = listing.get('location', '?')
-    location_parts = [p.strip() for p in location.split("|")]
-    location_short = " · ".join(location_parts[1:]) if len(location_parts) > 1 else location
+    location_parts = [p.strip() for p in listing.location.split("|")]
+    location_short = " · ".join(location_parts[1:]) if len(location_parts) > 1 else listing.location
 
     scam_line = f"<i>{scam_reason}</i>\n" if scam_reason else ""
     summary_line = f"\n💬 <i>{summary}</i>\n" if summary else ""
 
     return (
         f"{_listing_header(listing)}\n"
-        f"💶 {listing.get('price_text', '?')}  ·  📅 {listing.get('date_text', '?')}\n"
+        f"💶 {listing.price_text}  ·  📅 {listing.date_text}\n"
         f"📍 {location_short}\n"
         f"\n"
         f"⭐ Match: <b>{match}/10</b>  ·  🚨 Scam: <b>{scam}/10</b>\n"
@@ -90,5 +89,5 @@ def format_listing_with_ai(listing: dict, analysis: dict) -> str:
         f"{cons}\n"
         f"{summary_line}"
         f"\n"
-        f"🔗 <a href=\"{url}\">{url}</a>"
+        f"🔗 <a href=\"{listing.url}\">{listing.url}</a>"
     )

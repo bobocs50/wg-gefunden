@@ -12,6 +12,7 @@ from src.config import (
     WG_SIZE_MAX,
     WG_FLATSHARE_TYPES,
 )
+from src.listing import Listing
 
 MAX_RENT = DEFAULT_MAX_RENT
 EARLIEST_MOVE_IN = datetime.strptime(MOVE_IN_FROM, "%Y-%m-%d")
@@ -81,24 +82,18 @@ def _wg_type_ok(wg_type_code: str) -> bool:
     return wg_type_code in WG_FLATSHARE_TYPES
 
 
-def run_checks(listing: dict) -> list[tuple[str, str, bool]]:
+def run_checks(listing: Listing) -> list[tuple[str, str, bool]]:
     """Returns per-filter (name, display_value, passed) tuples for console reporting."""
-    price_text = listing.get("price_text", "0")
-    location = listing.get("location", "")
-    d_start = listing.get("date_start", "")
-    d_end = listing.get("date_end", "")
-    last_online = listing.get("last_online", "")
-    wg_type_code = listing.get("wg_type_code", "")
     checks = [
-        ("price",    price_text,                                  _price_ok(price_text)),
-        ("district", location[:45].strip(),                       _district_ok(location)),
-        ("dates",    f"{d_start} – {d_end}" if d_start else "?", _dates_ok(d_start)),
-        ("end_date", d_end or "open",                             _end_date_ok(d_end)),
-        ("online",   last_online or "unknown",                    _last_online_ok(last_online)),
+        ("price",    listing.price_text,                                                          _price_ok(listing.price_text)),
+        ("district", listing.location[:45].strip(),                                               _district_ok(listing.location)),
+        ("dates",    f"{listing.date_start} – {listing.date_end}" if listing.date_start else "?", _dates_ok(listing.date_start)),
+        ("end_date", listing.date_end or "open",                                                  _end_date_ok(listing.date_end)),
+        ("online",   listing.last_online or "unknown",                                            _last_online_ok(listing.last_online)),
     ]
-    if wg_type_code:
+    if listing.wg_type_code:
         checks += [
-            ("wg_size", location[:45].strip(), _wg_size_ok(location)),
-            ("wg_type", wg_type_code,          _wg_type_ok(wg_type_code)),
+            ("wg_size", listing.location[:45].strip(), _wg_size_ok(listing.location)),
+            ("wg_type", listing.wg_type_code,          _wg_type_ok(listing.wg_type_code)),
         ]
     return checks

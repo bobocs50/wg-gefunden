@@ -16,6 +16,7 @@ from src.config import (
     PROFILE_NICE_TO_HAVES,
     PROFILE_STRONG_PREFERENCES,
 )
+from src.listing import Listing
 
 _REQUIRED_KEYS = {"scam_score", "recommendation_score"}
 
@@ -79,16 +80,18 @@ def _get_client() -> OpenAI:
     return _client
 
 
-def _build_prompt(listing: dict, detail_text: str) -> str:
-    listing_block = (
-        f"Title: {listing.get('title', '?')}\n"
-        f"Price: {listing.get('price_text', '?')}\n"
-        f"Location: {listing.get('location', '?')}\n"
-        f"Dates: {listing.get('date_start', '?')} – {listing.get('date_end', '?')}\n"
-        f"URL: {listing.get('url', '?')}"
+def _listing_block(listing: Listing) -> str:
+    return (
+        f"Title: {listing.title}\n"
+        f"Price: {listing.price_text}\n"
+        f"Location: {listing.location}\n"
+        f"Dates: {listing.date_start} – {listing.date_end}"
     )
-    detail_block = detail_text if detail_text else "(no detail text available)"
 
+
+def _build_prompt(listing: Listing, detail_text: str) -> str:
+    listing_block = _listing_block(listing) + f"\nURL: {listing.url}"
+    detail_block = detail_text if detail_text else "(no detail text available)"
     return (
         _load_prompt()
         .replace("{{PROFILE}}", _profile_block())
@@ -114,7 +117,7 @@ def _validate(data: dict) -> dict:
     return data
 
 
-def analyze(listing: dict, detail_text: str) -> dict | None:
+def analyze(listing: Listing, detail_text: str) -> dict | None:
     """Call OpenAI to analyse a listing. Returns a validated result dict, or None on any failure."""
     if not os.getenv("OPENAI_API_KEY"):
         print("WARNING: OPENAI_API_KEY not set — skipping AI analysis")
@@ -134,23 +137,16 @@ def analyze(listing: dict, detail_text: str) -> dict | None:
         return None
 
 
-def draft_application(listing: dict, detail_text: str) -> str | None:
+def draft_application(listing: Listing, detail_text: str) -> str | None:
     """Call OpenAI to fill in the application message template. Returns plain text, or None on failure."""
     if not os.getenv("OPENAI_API_KEY"):
         return None
 
-    listing_block = (
-        f"Title: {listing.get('title', '?')}\n"
-        f"Price: {listing.get('price_text', '?')}\n"
-        f"Location: {listing.get('location', '?')}\n"
-        f"Dates: {listing.get('date_start', '?')} – {listing.get('date_end', '?')}"
-    )
     detail_block = detail_text if detail_text else "(kein Detailtext verfügbar)"
-
     prompt = (
         _load_application_draft()
         .replace("{{APPLICATION_TEMPLATE}}", _load_application_template())
-        .replace("{{LISTING}}", listing_block)
+        .replace("{{LISTING}}", _listing_block(listing))
         .replace("{{DETAIL_TEXT}}", detail_block)
     )
 
