@@ -95,7 +95,7 @@ flatshare_types = ["2", "12"]
 
 [ai]
 enabled = true
-model = "gemini-2.5-flash"
+model = "gpt-4.1-mini"
 # Per run: scrape and analyse at most this many matching listings with AI.
 # Extra matches still get basic Telegram alerts.
 max_calls_per_run = 3

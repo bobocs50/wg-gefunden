@@ -2,14 +2,13 @@ import json
 import os
 import threading
 
-from google import genai
-from google.genai import types
+from openai import OpenAI
 
 from src.config import (
     AI_PROMPT_FILE,
     APPLICATION_DRAFT_PROMPT_FILE,
     APPLICATION_TEMPLATE_FILE,
-    GEMINI_MODEL,
+    OPENAI_MODEL,
     MAX_OUTPUT_TOKENS,
     PROFILE_CONTEXT,
     PROFILE_MUST_HAVES,
@@ -23,7 +22,7 @@ _REQUIRED_KEYS = {"scam_score", "recommendation_score"}
 _prompt_cache: str | None = None
 _application_draft_cache: str | None = None
 _application_template_cache: str | None = None
-_client: genai.Client | None = None
+_client: OpenAI | None = None
 _client_lock = threading.Lock()
 
 
@@ -72,11 +71,11 @@ def _profile_block() -> str:
     )
 
 
-def _get_client() -> genai.Client:
+def _get_client() -> OpenAI:
     global _client
     with _client_lock:
         if _client is None:
-            _client = genai.Client(api_key=os.environ["GEMINI_API_KEY"])
+            _client = OpenAI(api_key=os.environ["OPENAI_API_KEY"])
     return _client
 
 
@@ -116,31 +115,28 @@ def _validate(data: dict) -> dict:
 
 
 def analyze(listing: dict, detail_text: str) -> dict | None:
-    """Call Gemini to analyse a listing. Returns a validated result dict, or None on any failure."""
-    if not os.getenv("GEMINI_API_KEY"):
-        print("WARNING: GEMINI_API_KEY not set — skipping AI analysis")
+    """Call OpenAI to analyse a listing. Returns a validated result dict, or None on any failure."""
+    if not os.getenv("OPENAI_API_KEY"):
+        print("WARNING: OPENAI_API_KEY not set — skipping AI analysis")
         return None
 
     try:
-        response = _get_client().models.generate_content(
-            model=GEMINI_MODEL,
-            contents=_build_prompt(listing, detail_text),
-            config=types.GenerateContentConfig(
-                response_mime_type="application/json",
-                max_output_tokens=MAX_OUTPUT_TOKENS,
-                thinking_config=types.ThinkingConfig(thinking_budget=0),
-            ),
+        response = _get_client().chat.completions.create(
+            model=OPENAI_MODEL,
+            messages=[{"role": "user", "content": _build_prompt(listing, detail_text)}],
+            response_format={"type": "json_object"},
+            max_tokens=MAX_OUTPUT_TOKENS,
         )
-        data = json.loads(response.text)
+        data = json.loads(response.choices[0].message.content)
         return _validate(data)
     except Exception as e:
-        print(f"Gemini error: {e}")
+        print(f"OpenAI error: {e}")
         return None
 
 
 def draft_application(listing: dict, detail_text: str) -> str | None:
-    """Call Gemini to fill in the application message template. Returns plain text, or None on failure."""
-    if not os.getenv("GEMINI_API_KEY"):
+    """Call OpenAI to fill in the application message template. Returns plain text, or None on failure."""
+    if not os.getenv("OPENAI_API_KEY"):
         return None
 
     listing_block = (
@@ -159,16 +155,13 @@ def draft_application(listing: dict, detail_text: str) -> str | None:
     )
 
     try:
-        response = _get_client().models.generate_content(
-            model=GEMINI_MODEL,
-            contents=prompt,
-            config=types.GenerateContentConfig(
-                max_output_tokens=MAX_OUTPUT_TOKENS,
-                thinking_config=types.ThinkingConfig(thinking_budget=0),
-            ),
+        response = _get_client().chat.completions.create(
+            model=OPENAI_MODEL,
+            messages=[{"role": "user", "content": prompt}],
+            max_tokens=MAX_OUTPUT_TOKENS,
         )
-        text = response.text.strip()
+        text = response.choices[0].message.content.strip()
         return text if text else None
     except Exception as e:
-        print(f"Gemini application draft error: {e}")
+        print(f"OpenAI application draft error: {e}")
         return None

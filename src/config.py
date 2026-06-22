@@ -52,7 +52,7 @@ SESSION_FILE = DATA_DIR / "session.json"
 
 # ─── AI ───────────────────────────────────────────────────────────────────────
 AI_ENABLED: bool = _cfg["ai"]["enabled"]
-GEMINI_MODEL: str = _cfg["ai"]["model"]
+OPENAI_MODEL: str = _cfg["ai"]["model"]
 AI_PROMPT_FILE = ROOT_DIR / "prompts" / "listing_analysis.md"
 APPLICATION_DRAFT_PROMPT_FILE = ROOT_DIR / "prompts" / "application_draft.md"
 APPLICATION_TEMPLATE_FILE = ROOT_DIR / "prompts" / "application_message.md"
