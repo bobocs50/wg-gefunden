@@ -124,6 +124,10 @@ def _parse_cards(page: Page) -> list[dict]:
             href = card.get_attribute("data-href") or ""
             if not listing_id or not href or "/s-anzeige/" not in href:
                 continue
+            # Only keep listings in category 203 (Wohnung mieten) — rejects promoted
+            # ads from bikes, products, and "Suche:" wanted ads that appear on the page.
+            if "-203-" not in href:
+                continue
 
             link = card.locator("a.ellipsis").first
             if not link.count():
@@ -181,9 +185,13 @@ def _district_ok(location: str) -> bool:
 
 
 def _type_ok(title: str) -> bool:
-    """Reject apartment swaps and wanted ads — these are not sublets for rent."""
+    """Reject apartment swaps, wanted ads, and non-apartment listings."""
     lower = title.lower()
-    reject_keywords = ["tauschwohnung", "wohnungsswap", "wohnungstausch", "suche wohnung", "wohnung gesucht"]
+    reject_keywords = [
+        "tauschwohnung", "wohnungsswap", "wohnungstausch",
+        "suche wohnung", "wohnung gesucht",
+        "gesuch:", "gesuch ",  # "Gesuch: Mietwohnung..." wanted ads
+    ]
     return not any(kw in lower for kw in reject_keywords)
 
 
