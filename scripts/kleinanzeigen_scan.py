@@ -18,6 +18,7 @@ load_dotenv()
 
 from playwright.sync_api import Page, BrowserContext, sync_playwright
 
+from src.listing import Listing
 from src.config import (
     DEFAULT_MAX_RENT,
     PREFERRED_DISTRICTS,
@@ -376,7 +377,19 @@ def run() -> None:
         analysis = None
 
         if AI_ENABLED and ai_calls < MAX_AI_CALLS_PER_RUN:
-            analysis = ai.analyze(listing, detail_text)
+            listing_obj = Listing(
+                id=listing["id"],
+                title=listing["title"],
+                price_text=listing["price_text"],
+                location=listing["location"],
+                date_text=listing["date_text"],
+                date_start=listing.get("date_start", ""),
+                date_end=listing.get("date_end", ""),
+                last_online="",
+                url=listing["url"],
+                wg_type_code="",
+            )
+            analysis = ai.analyze(listing_obj, detail_text)
             ai_calls += 1
 
         if analysis:
