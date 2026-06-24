@@ -86,7 +86,7 @@ def run_checks(listing: Listing) -> list[tuple[str, str, bool]]:
     """Returns per-filter (name, display_value, passed) tuples for console reporting."""
     checks = [
         ("price",    listing.price_text,                                                          _price_ok(listing.price_text)),
-        ("district", listing.location[:45].strip(),                                               _district_ok(listing.location)),
+        ("district", listing.location[:45].strip(),                                               _district_ok(listing.location + " " + listing.title)),
         ("dates",    f"{listing.date_start} – {listing.date_end}" if listing.date_start else "?", _dates_ok(listing.date_start)),
         ("end_date", listing.date_end or "open",                                                  _end_date_ok(listing.date_end)),
         ("online",   listing.last_online or "unknown",                                            _last_online_ok(listing.last_online)),
