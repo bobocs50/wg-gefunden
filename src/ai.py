@@ -6,8 +6,6 @@ from openai import OpenAI
 
 from src.config import (
     AI_PROMPT_FILE,
-    APPLICATION_DRAFT_PROMPT_FILE,
-    APPLICATION_TEMPLATE_FILE,
     OPENAI_MODEL,
     MAX_OUTPUT_TOKENS,
     PROFILE_CONTEXT,
@@ -21,8 +19,6 @@ from src.listing import Listing
 _REQUIRED_KEYS = {"scam_score", "recommendation_score"}
 
 _prompt_cache: str | None = None
-_application_draft_cache: str | None = None
-_application_template_cache: str | None = None
 _client: OpenAI | None = None
 _client_lock = threading.Lock()
 
@@ -32,20 +28,6 @@ def _load_prompt() -> str:
     if _prompt_cache is None:
         _prompt_cache = AI_PROMPT_FILE.read_text(encoding="utf-8")
     return _prompt_cache
-
-
-def _load_application_draft() -> str:
-    global _application_draft_cache
-    if _application_draft_cache is None:
-        _application_draft_cache = APPLICATION_DRAFT_PROMPT_FILE.read_text(encoding="utf-8")
-    return _application_draft_cache
-
-
-def _load_application_template() -> str:
-    global _application_template_cache
-    if _application_template_cache is None:
-        _application_template_cache = APPLICATION_TEMPLATE_FILE.read_text(encoding="utf-8")
-    return _application_template_cache
 
 
 def _bullet_list(items: list[str]) -> str:
@@ -137,27 +119,3 @@ def analyze(listing: Listing, detail_text: str) -> dict | None:
         return None
 
 
-def draft_application(listing: Listing, detail_text: str) -> str | None:
-    """Call OpenAI to fill in the application message template. Returns plain text, or None on failure."""
-    if not os.getenv("OPENAI_API_KEY"):
-        return None
-
-    detail_block = detail_text if detail_text else "(kein Detailtext verfügbar)"
-    prompt = (
-        _load_application_draft()
-        .replace("{{APPLICATION_TEMPLATE}}", _load_application_template())
-        .replace("{{LISTING}}", _listing_block(listing))
-        .replace("{{DETAIL_TEXT}}", detail_block)
-    )
-
-    try:
-        response = _get_client().chat.completions.create(
-            model=OPENAI_MODEL,
-            messages=[{"role": "user", "content": prompt}],
-            max_tokens=MAX_OUTPUT_TOKENS,
-        )
-        text = response.choices[0].message.content.strip()
-        return text if text else None
-    except Exception as e:
-        print(f"OpenAI application draft error: {e}")
-        return None

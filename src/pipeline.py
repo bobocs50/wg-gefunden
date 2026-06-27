@@ -1,7 +1,7 @@
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 
-from src.ai import analyze, draft_application
+from src.ai import analyze
 from src.config import AI_ENABLED, MAX_AI_CALLS_PER_RUN
 from src.filters import run_checks
 from src.listing import Listing
@@ -81,9 +81,6 @@ def process(listings: list[Listing], seen: set[str]) -> ProcessResult:
                 send(format_listing_with_ai(match, analysis))
             else:
                 send(format_listing(match))
-            draft = draft_application(match, details.get(match.url, ""))
-            if draft:
-                send(draft)
 
     for match in basic_matches:
         send(format_listing(match))
