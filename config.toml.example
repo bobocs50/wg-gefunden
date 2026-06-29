@@ -1,0 +1,97 @@
+# WG-Gesucht search configuration
+# Copy this file to config.toml and edit to your preferences.
+# Secrets (Telegram tokens, API keys, WG-Gesucht credentials) go in .env — never here.
+
+[search]
+# Paste your WG-Gesucht search URL here. Go to wg-gesucht.de, search your city,
+# copy the URL from the browser. Rent, dates, and categories are set by the bot
+# at runtime — the URL just needs to point at the right city.
+url = "https://www.wg-gesucht.de/1-zimmer-wohnungen-und-wohnungen-und-haeuser-in-Hamburg.55.1+2+3.1.0.html"
+max_rent = 1000
+move_in_from = "2026-09-01"
+move_in_to   = "2026-10-01"
+# Listings whose end date is before this are rejected (open-ended listings always pass).
+stay_until   = "2027-03-01"
+# Toggle which listing types to search for. Both can be true at once.
+search_apartments = true
+search_wg = false
+# Only show furnished listings (möbliert). false = show all.
+furnished_only = false
+# Only show listings where pets are allowed. false = show all.
+pets_allowed = false
+# Apartment category indices included when search_apartments = true.
+# 1=1-Zimmer-Wohnung, 2=Wohnung, 3=Haus  (0=WG-Zimmer is controlled by search_wg)
+categories = [1, 2, 3]
+# Listings whose landlord has been offline longer than this are filtered out.
+last_online_max_days = 7
+# Pages to paginate per run (~20 listings per page).
+max_pages = 1
+headless = true
+
+[districts]
+# A listing passes when its location string contains any of these values (case-insensitive).
+# Set fallback_city to pass listings with no sub-district (e.g. "Hamburg | Ifflandstraße").
+# Leave empty to keep the strict district check.
+fallback_city = ""
+preferred = [
+    "winterhude",
+    "eppendorf",
+    "eimsbüttel",
+    "eimsbuettel",
+    "barmbek-nord",
+    "alsterdorf",
+    "ohlsdorf",
+    "fuhlsbuettel",
+    "fuhlsbüttel",
+]
+
+[wg]
+# Maximum WG size to accept. 0 = no limit.
+wg_size_max = 3
+# Accepted flatshare types. Empty list = accept all types.
+# WG type codes:
+#  2 = Frauen-WG (women-only)
+# 12 = gemischte WG (mixed)
+#  3 = Männer-WG (men-only)
+#  1 = Studenten-WG
+#  4 = Business-WG
+#  5 = Wohnheim (dorm)
+#  6 = Berufstätigen-WG
+#  7 = Azubi-WG
+#  9 = WG mit Kindern
+# 16 = LGBTQIA+
+# 19 = Internationals welcome
+# 23 = keine Angaben zum Geschlecht
+flatshare_types = ["2", "12"]
+
+[ai]
+enabled = true
+model = "gpt-4.1-mini"
+# Per run: scrape and analyse at most this many matching listings with AI.
+# Extra matches still get basic Telegram alerts.
+max_calls_per_run = 3
+max_detail_chars = 2500
+max_output_tokens = 400
+
+[profile]
+# Inserted into prompts/listing_analysis.md at {{PROFILE}}.
+# Describe yourself and what you're looking for — the AI uses this to evaluate listings.
+name = "Apartment seeker"
+context = """
+Looking for a temporary apartment in Hamburg for a few months.
+"""
+must_haves = [
+    "Furnished",
+    "Sublet is allowed",
+    "Available for the requested date window",
+]
+strong_preferences = [
+    "Quiet neighbourhood",
+    "Good public transport",
+]
+nice_to_haves = [
+    "Natural light",
+    "Balcony",
+    "Washing machine",
+    "Fast internet",
+]
