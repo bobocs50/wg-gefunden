@@ -142,20 +142,32 @@ OPENAI_API_KEY=...   # only if [ai].enabled = true
 # DATA_DIR=/path/to/persistent/storage
 ```
 
-### 3) Configure search in `config.toml`
+### 3) Configure with the Streamlit UI ⭐
+
+This is the intended setup path — point-and-click instead of hand-editing TOML.
+
+```bash
+streamlit run scripts/ui.py
+```
+
+Open `http://localhost:8501`, fill in budget, dates, districts, WG type, and profile, then **Save**. The UI writes a validated `config.toml` and preserves any custom keys you've added.
+
+For your first run, leave **AI** disabled until everything else works end-to-end.
+
+<details>
+<summary>Prefer to edit <code>config.toml</code> by hand?</summary>
 
 Minimum fields:
 
-- `[search].url` — a pre-filtered WG-Gesucht search results URL. Open WG-Gesucht in your browser, set city/category/etc., then copy the URL from the address bar.<br/>Example: `https://www.wg-gesucht.de/wg-zimmer-in-Hamburg.55.0.1.0.html`
+- `[search].url` — pre-filtered WG-Gesucht search URL. Open WG-Gesucht in your browser, set city/category/etc., then copy the URL from the address bar.<br/>Example: `https://www.wg-gesucht.de/wg-zimmer-in-Hamburg.55.0.1.0.html`
 - `[search].max_rent`
 - `[search].move_in_from`
 - `[search].move_in_to`
 - `[search].stay_until`
 - `[districts].preferred`
+- `[ai].enabled = false` (for first run)
 
-For first run, keep AI off:
-
-- set `[ai].enabled = false`
+</details>
 
 ### 4) Create initial WG session
 
@@ -173,7 +185,7 @@ If startup fails with missing `OPENAI_API_KEY`, either add the key in `.env` or 
 
 ### Verify first match
 
-Keep `config.toml` minimal for the first run (1 city, small district list, `max_pages = 1`, `[ai].enabled = false`). If you see filter results and at least one `→ MATCH` in the console — and the Telegram alert lands — setup is working.
+Keep things minimal for the first run (small district list, `max_pages = 1`, AI off). If you see filter results and at least one `→ MATCH` in the console — and the Telegram alert lands — setup is working.
 
 <p align="center">
   <img src="assets/screen_message.png" alt="Telegram match notification example" width="420" />
@@ -182,16 +194,6 @@ Keep `config.toml` minimal for the first run (1 city, small district list, `max_
 ## Privacy
 
 Your WG-Gesucht credentials, session cookies (`data/session.json`), and seen-listing history (`data/seen_ids.json`) stay on your machine. The bot only talks to WG-Gesucht, Kleinanzeigen, Telegram, and (optionally) OpenAI. Nothing is reported to the maintainers.
-
-## Optional UI
-
-```bash
-streamlit run scripts/ui.py
-```
-
-Open `http://localhost:8501`
-
-UI writes `config.toml` with validation and preserves unknown/custom keys during save.
 
 ## Operations
 
