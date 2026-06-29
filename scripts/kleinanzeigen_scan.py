@@ -399,7 +399,7 @@ def run() -> None:
             if scam > 3 or match_score < 4:
                 print(f"    ✗ below threshold")
                 continue
-            msg = telegram.format_listing_with_ai(listing, analysis)
+            msg = telegram.format_listing_with_ai(listing_obj, analysis)
         else:
             msg = _format_no_ai(listing)
 
