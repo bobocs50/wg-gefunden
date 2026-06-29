@@ -38,7 +38,7 @@ Result: one low-noise apartment/WG deal feed instead of manual tab-refreshing ac
 This is exactly how I found my apartment for my internship in Hamburg.
 
 <p align="center">
-  <img src="assets/screen1.png" alt="Input and filter setup screen" width="900" />
+  <img src="assets/screen1.png" alt="Input and filter setup screen" width="640" />
 </p>
 
 ## 5-Minute First Success
@@ -58,7 +58,7 @@ python main.py
 If you see filter results and at least one `→ MATCH`, setup is working.
 
 <p align="center">
-  <img src="assets/screen_message.png" alt="Telegram match notification example" width="700" />
+  <img src="assets/screen_message.png" alt="Telegram match notification example" width="420" />
 </p>
 
 ## System Flow
