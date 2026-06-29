@@ -65,7 +65,7 @@ wg_size_max = 3
 flatshare_types = ["2", "12"]
 
 [ai]
-enabled = true
+enabled = false
 model = "gpt-4.1-mini"
 # Per run: scrape and analyse at most this many matching listings with AI.
 # Extra matches still get basic Telegram alerts.

@@ -1,304 +1,244 @@
-# WG-Gesucht Apartment Bot
+# WG-Gesucht Agent
 
-> Watch Hamburg listings, filter out the noise, and get only the matches you care about.
-> AI analysis is optional and disabled by default, so the bot stays cheap unless you turn it on.
+<p align="center">
+  <b>One feed. One filter pass. Only listings you actually care about.</b><br/>
+  Playwright crawler + deterministic filtering + optional AI scoring + Telegram delivery.
+</p>
 
-## Quick Facts
-
-| Item | Value |
-|---|---|
-| Language | Python |
-| Crawler | Playwright |
-| Alerts | Telegram |
-| AI | OpenAI, optional |
-| Default crawl pages | `1` |
-| Default AI calls per run | `3` |
+<p align="center">
+  <img alt="Python" src="https://img.shields.io/badge/Python-3.10%2B-3776AB?logo=python&logoColor=white" />
+  <img alt="Playwright" src="https://img.shields.io/badge/Playwright-Chromium-2EAD33?logo=playwright&logoColor=white" />
+  <img alt="Streamlit" src="https://img.shields.io/badge/Streamlit-Config_UI-FF4B4B?logo=streamlit&logoColor=white" />
+  <img alt="Telegram" src="https://img.shields.io/badge/Telegram-Alerts-26A5E4?logo=telegram&logoColor=white" />
+  <img alt="OpenAI" src="https://img.shields.io/badge/OpenAI-Optional_AI-412991?logo=openai&logoColor=white" />
+</p>
 
 ## What It Does
 
-| Step | Behavior |
-|---|---|
-| Crawl | Opens WG-Gesucht with Playwright and applies the search UI filters. |
-| Filter | Checks rent, district, availability window, landlord activity, and (for WG rooms) flatshare type and size. |
-| Deduplicate | Skips listings already saved in `data/seen_ids.json`. |
-| Notify | Sends Telegram alerts for fresh matches. |
-| Analyze | Optionally sends up to `max_calls_per_run` matches to OpenAI. |
-| Heartbeat | Daily Telegram report via `scripts/heartbeat.py` summarising the last 24 h of runs. |
+A renter configures one WG-Gesucht search URL, budget, date window, district list, and living preferences. The bot:
+
+- logs in with your WG account session
+- crawls fresh listings with Playwright
+- deduplicates against persisted seen IDs
+- applies deterministic hard filters
+- optionally runs AI analysis on shortlist results
+- sends compact Telegram alerts
+
+Result: a low-noise apartment/WG deal feed instead of manual tab-refreshing.
+
+## System Flow
+
+```mermaid
+flowchart LR
+    A[🔐 Ensure session] --> B[🕷 Crawl WG-Gesucht pages]
+    B --> C[💾 Persist seen IDs immediately]
+    C --> D[🧪 Deterministic filters]
+    D --> E{🤖 AI enabled?}
+    E -- yes --> F[AI shortlist scoring]
+    E -- no --> G[Skip AI]
+    F --> H[📨 Telegram alerts]
+    G --> H
+    H --> I[📊 Run stats]
+```
+
+## Architecture Map
+
+```mermaid
+flowchart TB
+    subgraph Config
+      ENV[.env\nSecrets]
+      TOML[config.toml\nFilters + profile]
+    end
+
+    subgraph Core
+      MAIN[main.py]
+      AUTH[src/auth.py]
+      CRAWLER[src/crawler.py]
+      PIPE[src/pipeline.py]
+      FILTERS[src/filters.py]
+      AI[src/ai.py]
+      TG[src/telegram.py]
+      SEEN[src/seen.py]
+      STATS[src/stats.py]
+    end
+
+    subgraph Optional Tools
+      UI[scripts/ui.py\nStreamlit editor]
+      LOGIN[scripts/login.py]
+      HEART[scripts/heartbeat.py]
+      KA[scripts/kleinanzeigen_scan.py]
+    end
+
+    ENV --> MAIN
+    TOML --> MAIN
+    MAIN --> AUTH --> CRAWLER --> SEEN --> PIPE
+    PIPE --> FILTERS
+    PIPE --> AI
+    PIPE --> TG
+    MAIN --> STATS
+    UI --> TOML
+    LOGIN --> AUTH
+    HEART --> STATS
+    KA --> FILTERS
+    KA --> AI
+    KA --> TG
+```
 
 ## Quick Start
 
+### Prerequisites
+
+- Python `3.11+` (required by `tomllib`)
+- Telegram bot token + your Telegram chat ID
+- WG-Gesucht account credentials
+- Optional: OpenAI API key (only if AI is enabled)
+
+### 1) Install
+
 ```bash
+git clone git@github.com:bobocs50/wggesucht.git
+cd wggesucht
+
 python3 -m venv venv
 source venv/bin/activate
+
 pip install -r requirements.txt
 playwright install chromium
+
 cp .env.example .env
 cp config.toml.example config.toml
 ```
 
-Then fill in `.env` with your secrets. Keep that file local.
+### 2) Add secrets in `.env`
 
-## First Login
+```env
+TELEGRAM_BOT_TOKEN=...
+TELEGRAM_CHAT_ID=...
+WGG_EMAIL=...
+WGG_PASSWORD=...
+OPENAI_API_KEY=...   # only if [ai].enabled = true
+# DATA_DIR=/path/to/persistent/storage
+```
 
-Run this once so the bot can reuse a saved WG-Gesucht session.
+### 3) Configure search in `config.toml`
+
+Minimum fields:
+
+- `[search].url`
+- `[search].max_rent`
+- `[search].move_in_from`
+- `[search].move_in_to`
+- `[search].stay_until`
+- `[districts].preferred`
+
+For first run, keep AI off:
+
+- set `[ai].enabled = false`
+
+### 4) Create initial WG session
 
 ```bash
 python scripts/login.py
 ```
 
-This opens a browser, logs in, and saves `data/session.json`.
-
-## Run
+### 5) Run bot
 
 ```bash
 python main.py
 ```
 
-## Config UI (optional)
+If startup fails with missing `OPENAI_API_KEY`, either add the key in `.env` or set `[ai].enabled = false`.
 
-Edit `config.toml` through a browser instead of manually over SSH.
+## Optional UI
 
 ```bash
 streamlit run scripts/ui.py
 ```
 
-Access locally via SSH tunnel: `ssh -L 8501:localhost:8501 root@yourserver`, then open `http://localhost:8501`.
+Open `http://localhost:8501`
 
-Each run follows the same pipeline:
+UI writes `config.toml` with validation and preserves unknown/custom keys during save.
 
-1. Validates (and refreshes) your saved session.
-2. Applies WG-Gesucht search filters in the browser.
-3. Crawls `max_pages` pages.
-4. Skips listings already stored in `data/seen_ids.json`.
-5. Checks price, district, dates, last-online recency, and (for WG rooms) flatshare type and size.
-6. Sends Telegram alerts for new matches.
-7. Optionally sends up to `max_calls_per_run` matches to OpenAI for analysis.
-8. Appends run stats to `data/stats.json`.
+## Operations
 
-Example console flow:
+### Daily heartbeat
 
-```text
-Session valid.
-Filters applied — https://www.wg-gesucht.de/...
-  page 1: 8 listings
-
-  Helle Wohnung in Hamburg
-    ✓ price      1000 €
-    ✓ district   1-Zimmer-Wohnung | Hamburg | ...
-    ✓ dates      01.08.2026 –
-    ✓ online     unknown
-    → MATCH
+```bash
+python scripts/heartbeat.py
 ```
 
-## Configuration
+Sends Telegram summary with run count, matches, AI calls, relogins, errors, and session age.
 
-All search preferences, budget, districts, and AI settings live in **`config.toml`**. Secrets live in **`.env`**.
+### Kleinanzeigen scanner
 
-### `config.toml`
-
-```toml
-[search]
-url           = "https://www.wg-gesucht.de/..."  # base search URL (rent/dates overridden at runtime)
-max_rent      = 1000
-move_in_from = "2026-08-01"  # frühestes Einzugsdatum
-move_in_to   = "2026-09-01"  # spätestes Einzugsdatum
-search_apartments = true   # include 1-Zimmer, Wohnung, Haus
-search_wg         = false  # include WG-Zimmer (activates [wg] filters below)
-furnished_only    = false  # true = only show furnished (möbliert) listings
-pets_allowed      = false  # true = only show listings where pets are allowed
-categories        = [1, 2, 3]  # apartment types when search_apartments=true: 1=1-Zimmer, 2=Wohnung, 3=Haus
-last_online_max_days = 7
-max_pages  = 1
-headless   = true
-
-[districts]
-preferred      = ["winterhude", "eppendorf", ...]
-fallback_city  = ""  # set to "Hamburg" to pass listings with no sub-district
-
-[wg]
-wg_size_max = 3   # max number of people in the WG; 0 = no limit
-
-# Accepted flatshare types — empty list = accept all types.
-# Available codes:
-#  2 = Frauen-WG (women-only)
-# 12 = gemischte WG (mixed)
-#  3 = Männer-WG (men-only)
-#  1 = Studenten-WG
-#  4 = Business-WG
-#  5 = Wohnheim (dorm)
-#  6 = Berufstätigen-WG
-#  7 = Azubi-WG
-#  9 = WG mit Kindern
-# 16 = LGBTQIA+
-# 19 = Internationals welcome
-# 23 = keine Angaben zum Geschlecht
-flatshare_types = ["2", "12"]
-
-[ai]
-enabled           = true
-model             = "gpt-4.1-mini"
-max_calls_per_run = 3
-max_detail_chars  = 2500
-max_output_tokens = 400
-
-[profile]
-name    = "Apartment seeker"
-context = "..."       # inserted into the AI prompt
-must_haves         = [...]
-strong_preferences = [...]
-nice_to_haves      = [...]
+```bash
+python scripts/kleinanzeigen_scan.py
 ```
+
+Uses the same filtering + optional AI evaluation pattern for Kleinanzeigen rentals.
+
+## Config Reference
 
 ### `.env`
 
-```env
-# Telegram
-TELEGRAM_BOT_TOKEN=
-TELEGRAM_CHAT_ID=
+| Variable | Required | Purpose |
+|---|---|---|
+| `TELEGRAM_BOT_TOKEN` | Yes | Telegram bot auth |
+| `TELEGRAM_CHAT_ID` | Yes | Destination chat |
+| `WGG_EMAIL` | Yes | WG-Gesucht login |
+| `WGG_PASSWORD` | Yes | WG-Gesucht login |
+| `OPENAI_API_KEY` | Only if AI enabled | AI listing analysis |
+| `DATA_DIR` | Optional | Override runtime storage path |
 
-# OpenAI (only needed when ai.enabled = true in config.toml)
-OPENAI_API_KEY=
+### `config.toml`
 
-# WG-Gesucht credentials (for auto-relogin and scripts/login.py)
-WGG_EMAIL=
-WGG_PASSWORD=
+| Section | Purpose |
+|---|---|
+| `[search]` | URL, rent cap, date window, crawl depth, listing toggles |
+| `[districts]` | preferred districts + optional city fallback |
+| `[wg]` | flatshare size/type constraints |
+| `[ai]` | model and per-run AI limits |
+| `[profile]` | personal preference text inserted into AI prompt |
 
-# Persistent storage path (default: ./data — override on cloud to a mounted volume)
-# DATA_DIR=/mnt/data
-```
-
-## What Gets Filtered
-
-Before AI ever runs, a listing must pass these checks:
-
-- Not already seen.
-- Price at or below `max_rent`.
-- Location matches one of the preferred districts in `config.toml`.
-- Start and end dates fit your availability window.
-- Landlord was online within `last_online_max_days`.
-- For WG rooms: flatshare type is in `flatshare_types` (if set) and size ≤ `wg_size_max` (if set).
-
-Only listings that pass all of that can reach the AI.
-
-## When AI Runs
-
-AI is only used when all of these are true:
-
-- `ai.enabled = true` in `config.toml`.
-- `OPENAI_API_KEY` is set in `.env`.
-- The listing is new.
-- The listing passes all local filters.
-- The listing is within the first `max_calls_per_run` matches for that run.
-
-If there are more matches than the cap, they still get basic Telegram alerts without AI analysis.
-
-## Cost Controls
-
-The defaults are intentionally conservative. Before deploying with AI enabled, set a billing budget and alert in the OpenAI dashboard.
-
-## Deployment
-
-### Local
-
-- Use the setup steps above.
-- Run `python scripts/login.py` once.
-- Start with `python main.py`.
-
-### Cloud
-
-- Store `OPENAI_API_KEY`, `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID`, `WGG_EMAIL`, and `WGG_PASSWORD` as secrets.
-- Set `ai.enabled = false` for the first deployment run.
-- Keep `max_pages = 1` unless you explicitly want more crawl load.
-- Set a billing budget before turning AI on.
-- Do not log full listing text or prompt payloads.
-- Set `DATA_DIR=/path/to/persistent/volume` so `session.json`, `seen_ids.json`, and `stats.json` survive between runs.
-
-### Cron Schedule (recommended)
-
-Run during active posting hours only — landlords rarely post at night.
-
-```
-# All times are CEST (UTC+2) — cron runs in UTC, so subtract 2h
-
-# Morning 6:30–10:00 CEST (= 4:30–8:00 UTC) → every 15 min
-8,23,38,53 4,5,6,7 * * * cd /root/wggefunden && venv/bin/python3 main.py >> logs/main.log 2>&1
-
-# Lunch 12:00–14:00 CEST (= 10:00–12:00 UTC) → every 15 min
-11,26,41,56 10,11 * * * cd /root/wggefunden && venv/bin/python3 main.py >> logs/main.log 2>&1
-
-# Evening 17:00–23:00 CEST (= 15:00–21:00 UTC) → every 15 min
-14,29,44,59 15,16,17,18,19,20,21 * * * cd /root/wggefunden && venv/bin/python3 main.py >> logs/main.log 2>&1
-
-# Daily heartbeat 07:00 CEST (= 05:00 UTC)
-0 5 * * * cd /root/wggefunden && venv/bin/python3 scripts/heartbeat.py >> logs/main.log 2>&1
-```
-
-Each slot uses a different minute offset so runs don't align with round numbers. ~60 runs/day, max 180 AI calls.
-
-Setup on the server:
+## Tests
 
 ```bash
-mkdir -p /root/wggefunden/logs
-crontab -e   # paste the lines above
+python3 -m unittest -v
+python3 -m unittest -v tests.test_ui_config
 ```
 
-### Server Tips (Hetzner / Ubuntu)
+Note: full test suite requires all dependencies from `requirements.txt` in the active venv.
 
-```bash
-# Keep the session alive after you disconnect
-apt install -y screen
-screen -S wg
-# run your commands inside screen, then Ctrl+A D to detach
+## Runtime Guarantees
 
-# Check cron is running
-systemctl status cron
+- 🔒 Secrets remain in `.env`; non-secret behavior remains in `config.toml`.
+- 💾 Seen IDs are persisted before AI work, so a mid-run crash doesn’t lose dedupe state.
+- ♻️ Session expiry triggers re-login attempts automatically.
+- 🧱 Deterministic filters run regardless of AI availability.
 
-# Watch the live log
-tail -f /root/wggefunden/logs/main.log
+## Repository Layout
 
-# Check disk usage (seen_ids.json grows over time, stays small)
-du -sh /root/wggefunden/data/
+```text
+src/
+  auth.py            session validation + re-login
+  crawler.py         WG-Gesucht scraping
+  filters.py         deterministic listing filters
+  pipeline.py        end-to-end decision pipeline
+  ai.py              optional OpenAI evaluation layer
+  telegram.py        Telegram notifier
+  ui_config.py       Streamlit form validation + safe config merge
+scripts/
+  login.py           create/refresh WG session
+  ui.py              Streamlit config editor
+  heartbeat.py       daily bot health report
+  kleinanzeigen_scan.py
+main.py              primary bot entrypoint
+tests/               unit tests
 ```
-
-## Safety
-
-- Treat scraped listing text as untrusted.
-- Do not paste real API keys into chat.
-- Rotate any key that was exposed.
-- Store secrets as environment variables or cloud secrets.
-- Do not log full prompts, tokens, or scraped personal data.
 
 ## Troubleshooting
 
-- If the browser fails to start, reinstall Chromium with `playwright install chromium`.
-- If `main.py` exits before crawling, run `python scripts/login.py` again to refresh the session.
-- If AI never runs, check `ai.enabled = true` and `OPENAI_API_KEY` in `.env`.
-- If matches look wrong, adjust filters in `config.toml`.
-- If the daily heartbeat reports no runs, check `systemctl status cron` and the cron log.
-
-## Repository Map
-
-```text
-main.py                       Main run loop
-config.toml                   All search preferences, budget, districts, AI, and profile settings
-src/config.py                 Thin loader — reads config.toml and exposes constants
-src/browser.py                Shared Playwright context managers (authenticated_page, fresh_page)
-src/auth.py                   Session validation and auto-relogin
-src/crawler.py                Playwright crawler and search filter UI automation
-src/filters.py                Local hard filters (price, district, dates, online recency, WG type)
-src/scraper.py                Detail-page text scraping for AI input
-src/ai.py                     OpenAI JSON analysis
-src/telegram.py               Telegram formatting and sending
-src/seen.py                   Seen-list persistence (data/seen_ids.json)
-src/stats.py                  Run metrics persistence (data/stats.json)
-scripts/login.py              One-time WG-Gesucht login/session setup
-scripts/heartbeat.py          Daily Telegram report summarising the last 24 h of runs
-scripts/inspect_search.py     Search/debug helper
-prompts/listing_analysis.md   AI prompt template
-```
-
-## Validation
-
-```bash
-python3 -m py_compile main.py src/*.py scripts/*.py
-```
+- `ModuleNotFoundError`: activate venv and reinstall requirements.
+- No Telegram alerts: re-check `TELEGRAM_BOT_TOKEN` and `TELEGRAM_CHAT_ID`.
+- Login failures: verify `WGG_EMAIL`/`WGG_PASSWORD`, rerun `python scripts/login.py`.
+- Too few matches: relax rent cap, district list, date window, or `last_online_max_days`.
