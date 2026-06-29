@@ -54,6 +54,16 @@ This opens a browser, logs in, and saves `data/session.json`.
 python main.py
 ```
 
+## Config UI (optional)
+
+Edit `config.toml` through a browser instead of manually over SSH.
+
+```bash
+streamlit run scripts/ui.py
+```
+
+Access locally via SSH tunnel: `ssh -L 8501:localhost:8501 root@yourserver`, then open `http://localhost:8501`.
+
 Each run follows the same pipeline:
 
 1. Validates (and refreshes) your saved session.
