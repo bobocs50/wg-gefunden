@@ -270,6 +270,24 @@ main.py              primary bot entrypoint
 tests/               unit tests
 ```
 
+## Deployment
+
+Designed to run as a cron job on any small Linux box. The author runs it on a **Hetzner Cloud CX11 / CAX11** instance for **~€0.68 / month** — the whole pipeline (Playwright + OpenAI calls + Telegram) fits comfortably in 2 GB RAM and a few CPU minutes per day.
+
+Example cron entry (every 10 minutes):
+
+```cron
+*/10 * * * * cd /root/wggefunden && /root/wggefunden/venv/bin/python3 main.py >> /var/log/wggefunden.log 2>&1
+```
+
+Plus a daily heartbeat at 09:00:
+
+```cron
+0 9 * * * cd /root/wggefunden && /root/wggefunden/venv/bin/python3 scripts/heartbeat.py
+```
+
+OpenAI usage with `[ai].enabled = true` and `MAX_AI_CALLS_PER_RUN = 3` typically stays under **$1 / month** on `gpt-4.1-mini`.
+
 ## Troubleshooting
 
 - `ModuleNotFoundError`: activate venv and reinstall requirements.
