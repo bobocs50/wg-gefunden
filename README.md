@@ -272,7 +272,7 @@ tests/               unit tests
 
 ## Deployment
 
-Designed to run as a cron job on any small Linux box. The author runs it on a **Hetzner Cloud CX11 / CAX11** instance for **~€0.68 / month** — the whole pipeline (Playwright + OpenAI calls + Telegram) fits comfortably in 2 GB RAM and a few CPU minutes per day.
+Designed to run as a cron job on any small Linux box. The author runs it on a **Hetzner Cloud CX23** instance for **€4.75 / month** — the whole pipeline (Playwright + OpenAI calls + Telegram) fits comfortably with headroom to spare.
 
 Example cron entry (every 10 minutes):
 
