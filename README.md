@@ -33,6 +33,34 @@ Then it:
 
 Result: one low-noise apartment/WG deal feed instead of manual tab-refreshing across multiple sites.
 
+## Why This Exists
+
+This is exactly how I found my apartment for my internship in Hamburg.
+
+<p align="center">
+  <img src="assets/screen1.png" alt="Input and filter setup screen" width="900" />
+</p>
+
+## 5-Minute First Success
+
+Goal: get your first run and first potential match output in under 5 minutes.
+
+1. Install and copy config files.
+2. Add `.env` credentials.
+3. Keep `config.toml` simple (1 city, small district list, `max_pages = 1`).
+4. Run:
+
+```bash
+python scripts/login.py
+python main.py
+```
+
+If you see filter results and at least one `→ MATCH`, setup is working.
+
+<p align="center">
+  <img src="assets/screen_message.png" alt="Telegram match notification example" width="700" />
+</p>
+
 ## System Flow
 
 ```mermaid
