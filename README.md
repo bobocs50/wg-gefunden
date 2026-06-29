@@ -35,30 +35,12 @@ Result: one low-noise apartment/WG deal feed instead of manual tab-refreshing ac
 
 ## Why This Exists
 
-This is exactly how I found my apartment for my internship in Hamburg.
+This is exactly how I found my apartment for my internship in Hamburg. WG-Gesucht and Kleinanzeigen move fast — competitive listings are gone within hours. Manually refreshing tabs across two sites doesn't scale, and naive RSS-style alerts flood you with junk. Hard filters first (rent, dates, districts) then optional AI scoring on the shortlist gives you a clean, low-noise feed.
+
+> Built and tested against Hamburg. Any WG-Gesucht city URL should work — only Hamburg is regularly verified.
 
 <p align="center">
   <img src="assets/screen1.png" alt="Input and filter setup screen" width="640" />
-</p>
-
-## 5-Minute First Success
-
-Goal: get your first run and first potential match output in under 5 minutes.
-
-1. Install and copy config files.
-2. Add `.env` credentials.
-3. Keep `config.toml` simple (1 city, small district list, `max_pages = 1`).
-4. Run:
-
-```bash
-python scripts/login.py
-python main.py
-```
-
-If you see filter results and at least one `→ MATCH`, setup is working.
-
-<p align="center">
-  <img src="assets/screen_message.png" alt="Telegram match notification example" width="420" />
 </p>
 
 ## System Flow
@@ -82,8 +64,8 @@ flowchart LR
 ```mermaid
 flowchart TB
     subgraph Config
-      ENV[.env\nSecrets]
-      TOML[config.toml\nFilters + profile]
+      ENV[".env<br/>Secrets"]
+      TOML["config.toml<br/>Filters + profile"]
     end
 
     subgraph Core
@@ -99,7 +81,7 @@ flowchart TB
     end
 
     subgraph Optional Tools
-      UI[scripts/ui.py\nStreamlit editor]
+      UI["scripts/ui.py<br/>Streamlit editor"]
       LOGIN[scripts/login.py]
       HEART[scripts/heartbeat.py]
       KA[scripts/kleinanzeigen_scan.py]
@@ -132,7 +114,10 @@ flowchart TB
 ### 1) Install
 
 ```bash
-git clone git@github.com:bobocs50/wggesucht.git
+# HTTPS (recommended for new users)
+git clone https://github.com/bobocs50/wggesucht.git
+# or SSH if you have a key set up:
+# git clone git@github.com:bobocs50/wggesucht.git
 cd wggesucht
 
 python3 -m venv venv
@@ -160,7 +145,7 @@ OPENAI_API_KEY=...   # only if [ai].enabled = true
 
 Minimum fields:
 
-- `[search].url`
+- `[search].url` — a pre-filtered WG-Gesucht search results URL. Open WG-Gesucht in your browser, set city/category/etc., then copy the URL from the address bar.<br/>Example: `https://www.wg-gesucht.de/wg-zimmer-in-Hamburg.55.0.1.0.html`
 - `[search].max_rent`
 - `[search].move_in_from`
 - `[search].move_in_to`
@@ -184,6 +169,18 @@ python main.py
 ```
 
 If startup fails with missing `OPENAI_API_KEY`, either add the key in `.env` or set `[ai].enabled = false`.
+
+### Verify first match
+
+Keep `config.toml` minimal for the first run (1 city, small district list, `max_pages = 1`, `[ai].enabled = false`). If you see filter results and at least one `→ MATCH` in the console — and the Telegram alert lands — setup is working.
+
+<p align="center">
+  <img src="assets/screen_message.png" alt="Telegram match notification example" width="420" />
+</p>
+
+## Privacy
+
+Your WG-Gesucht credentials, session cookies (`data/session.json`), and seen-listing history (`data/seen_ids.json`) stay on your machine. The bot only talks to WG-Gesucht, Kleinanzeigen, Telegram, and (optionally) OpenAI. Nothing is reported to the maintainers.
 
 ## Optional UI
 
@@ -239,16 +236,16 @@ Uses the same filtering + optional AI evaluation pattern for Kleinanzeigen renta
 ## Tests
 
 ```bash
-python3 -m unittest -v
-python3 -m unittest -v tests.test_ui_config
+python3 -m unittest -v                          # full suite
+python3 -m unittest -v tests.test_filters       # single module
 ```
 
-Note: full test suite requires all dependencies from `requirements.txt` in the active venv.
+Covers filters, AI response parsing, seen-ID persistence, Telegram formatting, UI config merge, and a `main.py` smoke test. New tests go in `tests/test_<module>.py`. Full suite requires `requirements.txt` installed in the active venv.
 
 ## Runtime Guarantees
 
 - 🔒 Secrets remain in `.env`; non-secret behavior remains in `config.toml`.
-- 💾 Seen IDs are persisted before AI work, so a mid-run crash doesn’t lose dedupe state.
+- 💾 Seen IDs are persisted before AI work, so a mid-run crash doesn't lose dedupe state.
 - ♻️ Session expiry triggers re-login attempts automatically.
 - 🧱 Deterministic filters run regardless of AI availability.
 
@@ -278,3 +275,9 @@ tests/               unit tests
 - No Telegram alerts: re-check `TELEGRAM_BOT_TOKEN` and `TELEGRAM_CHAT_ID`.
 - Login failures: verify `WGG_EMAIL`/`WGG_PASSWORD`, rerun `python scripts/login.py`.
 - Too few matches: relax rent cap, district list, date window, or `last_online_max_days`.
+
+## Contributing & License
+
+- License: [MIT](LICENSE)
+- Contributing: see [CONTRIBUTING.md](CONTRIBUTING.md)
+- Security: report vulnerabilities per [SECURITY.md](SECURITY.md) — please do not open public issues for security problems.
