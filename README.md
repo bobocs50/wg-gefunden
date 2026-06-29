@@ -9,10 +9,12 @@
 <p>
   <img alt="Python" src="https://img.shields.io/badge/Python-3.11%2B-3776AB?logo=python&logoColor=white" />
   <img alt="Playwright" src="https://img.shields.io/badge/Playwright-Chromium-2EAD33?logo=playwright&logoColor=white" />
-  <img alt="Streamlit" src="https://img.shields.io/badge/Streamlit-Config_UI-FF4B4B?logo=streamlit&logoColor=white" />
   <img alt="Telegram" src="https://img.shields.io/badge/Telegram-Alerts-26A5E4?logo=telegram&logoColor=white" />
-  <img alt="OpenAI" src="https://img.shields.io/badge/OpenAI-Optional_AI-412991?logo=openai&logoColor=white" />
+  <img alt="License" src="https://img.shields.io/badge/License-MIT-blue.svg" />
 </p>
+
+<img src="assets/screen1.png" alt="Input and filter setup screen" width="720" />
+
 </div>
 
 ## What It Does
@@ -39,10 +41,6 @@ This is exactly how I found my apartment for my internship in Hamburg. WG-Gesuch
 
 > Built and tested against Hamburg. Any WG-Gesucht city URL should work — only Hamburg is regularly verified.
 
-<p align="center">
-  <img src="assets/screen1.png" alt="Input and filter setup screen" width="640" />
-</p>
-
 ## System Flow
 
 ```mermaid
@@ -59,7 +57,8 @@ flowchart LR
     H --> I[📊 Run stats]
 ```
 
-## Architecture Map
+<details>
+<summary><b>Architecture Map</b> (for contributors)</summary>
 
 ```mermaid
 flowchart TB
@@ -101,6 +100,8 @@ flowchart TB
     KA --> AI
     KA --> TG
 ```
+
+</details>
 
 ## Quick Start
 
