@@ -1,21 +1,28 @@
-# WG-Gesucht Agent
+<div align="center">
+<h1>WG-Gesucht Agent</h1>
 
-<p align="center">
+<p>
   <b>One feed. One filter pass. Only listings you actually care about.</b><br/>
-  Playwright crawler + deterministic filtering + optional AI scoring + Telegram delivery.
+  WG-Gesucht + Kleinanzeigen crawlers, deterministic filtering, optional AI scoring, Telegram delivery.
 </p>
 
-<p align="center">
-  <img alt="Python" src="https://img.shields.io/badge/Python-3.10%2B-3776AB?logo=python&logoColor=white" />
+<p>
+  <img alt="Python" src="https://img.shields.io/badge/Python-3.11%2B-3776AB?logo=python&logoColor=white" />
   <img alt="Playwright" src="https://img.shields.io/badge/Playwright-Chromium-2EAD33?logo=playwright&logoColor=white" />
   <img alt="Streamlit" src="https://img.shields.io/badge/Streamlit-Config_UI-FF4B4B?logo=streamlit&logoColor=white" />
   <img alt="Telegram" src="https://img.shields.io/badge/Telegram-Alerts-26A5E4?logo=telegram&logoColor=white" />
   <img alt="OpenAI" src="https://img.shields.io/badge/OpenAI-Optional_AI-412991?logo=openai&logoColor=white" />
 </p>
+</div>
 
 ## What It Does
 
-A renter configures one WG-Gesucht search URL, budget, date window, district list, and living preferences. The bot:
+A renter configures budget, date window, district list, and living preferences. The bot scans:
+
+- WG-Gesucht listings
+- Kleinanzeigen rental listings
+
+Then it:
 
 - logs in with your WG account session
 - crawls fresh listings with Playwright
@@ -24,14 +31,15 @@ A renter configures one WG-Gesucht search URL, budget, date window, district lis
 - optionally runs AI analysis on shortlist results
 - sends compact Telegram alerts
 
-Result: a low-noise apartment/WG deal feed instead of manual tab-refreshing.
+Result: one low-noise apartment/WG deal feed instead of manual tab-refreshing across multiple sites.
 
 ## System Flow
 
 ```mermaid
 flowchart LR
-    A[🔐 Ensure session] --> B[🕷 Crawl WG-Gesucht pages]
-    B --> C[💾 Persist seen IDs immediately]
+    A[🔐 Ensure WG session] --> B1[🕷 Crawl WG-Gesucht pages]
+    B2[🕷 Crawl Kleinanzeigen pages] --> C[💾 Persist seen IDs immediately]
+    B1 --> C
     C --> D[🧪 Deterministic filters]
     D --> E{🤖 AI enabled?}
     E -- yes --> F[AI shortlist scoring]
