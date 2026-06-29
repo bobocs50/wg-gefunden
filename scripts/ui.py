@@ -3,6 +3,7 @@ import tomli_w
 import streamlit as st
 from datetime import date
 from pathlib import Path
+from src.ui_config import build_config, validate_form
 
 CONFIG_PATH = Path(__file__).resolve().parent.parent / "config.toml"
 
@@ -28,18 +29,198 @@ def parse_date(s: str) -> date:
     return date.fromisoformat(s)
 
 
-def lines_to_list(text: str) -> list[str]:
-    return [line.strip() for line in text.splitlines() if line.strip()]
-
-
 @st.cache_data
 def load_config() -> dict:
     with open(CONFIG_PATH, "rb") as f:
         return tomllib.load(f)
 
 
+def inject_styles() -> None:
+    st.markdown(
+        """
+        <style>
+        @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500&display=swap');
+
+        :root {
+            --bg-main: #f5f6f8;
+            --surface: #ffffff;
+            --surface-soft: #ffffff;
+            --text-main: #121417;
+            --text-muted: #7a8187;
+            --line: #e9edf1;
+            --accent: #2d63e2;
+            --accent-strong: #214ec2;
+            --ease-out-strong: cubic-bezier(0.23, 1, 0.32, 1);
+        }
+
+        html, body, [class*="css"] {
+            font-family: "Manrope", sans-serif;
+        }
+
+        .stApp {
+            background: var(--bg-main);
+            color: var(--text-main);
+        }
+
+        .block-container {
+            max-width: 820px;
+            padding-top: 2.8rem;
+            padding-bottom: 2.2rem;
+        }
+
+        h1 {
+            letter-spacing: -0.04em;
+            font-weight: 800;
+            color: var(--text-main);
+            margin-bottom: 0.35rem;
+            text-align: center;
+            font-size: clamp(2rem, 5vw, 3.4rem);
+            line-height: 1.02;
+        }
+
+        .stCaption {
+            color: var(--text-muted);
+            text-align: center;
+            margin-bottom: 0.85rem;
+        }
+
+        [data-testid="stExpander"] {
+            border: 1px solid var(--line);
+            border-radius: 10px;
+            background: var(--surface);
+            margin-bottom: 0.7rem;
+            overflow: hidden;
+            box-shadow: none;
+            transition: border-color 150ms var(--ease-out-strong), background-color 150ms var(--ease-out-strong);
+        }
+
+        [data-testid="stExpander"]:hover {
+            border-color: #dfe5ea;
+            box-shadow: none;
+            transform: none;
+        }
+
+        [data-testid="stExpander"] details summary {
+            font-weight: 700;
+            font-size: 0.95rem;
+            color: #2b3136;
+            padding-top: 0.35rem;
+            padding-bottom: 0.35rem;
+        }
+
+        [data-testid="stTextInput"] input,
+        [data-testid="stNumberInput"] input,
+        [data-testid="stDateInput"] input,
+        [data-testid="stTextArea"] textarea {
+            border: 1px solid var(--line);
+            border-radius: 7px;
+            background: #fff;
+            transition: border-color 140ms var(--ease-out-strong), box-shadow 140ms var(--ease-out-strong), transform 120ms var(--ease-out-strong);
+        }
+
+        [data-testid="stTextInput"] input:focus,
+        [data-testid="stNumberInput"] input:focus,
+        [data-testid="stDateInput"] input:focus,
+        [data-testid="stTextArea"] textarea:focus {
+            border-color: #bcc9ff;
+            box-shadow: 0 0 0 3px rgba(45, 99, 226, 0.12);
+        }
+
+        [data-testid="stMultiSelect"] [data-baseweb="select"] > div {
+            border-radius: 7px;
+            border-color: var(--line);
+            transition: border-color 150ms var(--ease-out-strong), box-shadow 150ms var(--ease-out-strong);
+        }
+
+        [data-testid="stMultiSelect"] [data-baseweb="select"] > div:focus-within {
+            border-color: #bcc9ff;
+            box-shadow: 0 0 0 3px rgba(45, 99, 226, 0.12);
+        }
+
+        [data-testid="stButton"] > button {
+            min-height: 2.6rem;
+            border-radius: 7px;
+            border: 1px solid #2d63e2;
+            background: #2d63e2;
+            color: #ffffff;
+            font-weight: 700;
+            letter-spacing: 0.01em;
+            transition: transform 120ms var(--ease-out-strong), filter 120ms var(--ease-out-strong), background-color 120ms var(--ease-out-strong), border-color 120ms var(--ease-out-strong);
+        }
+
+        [data-testid="stButton"] > button:hover {
+            filter: brightness(1);
+            box-shadow: none;
+            background: #214ec2;
+            border-color: #214ec2;
+        }
+
+        [data-testid="stButton"] > button:active {
+            transform: scale(0.97);
+        }
+
+        [data-testid="stToggle"] label[data-testid="stWidgetLabel"] p,
+        [data-testid="stCheckbox"] label p {
+            font-weight: 600;
+            color: #2f3438;
+        }
+
+        [data-testid="stRadio"] label p,
+        [data-testid="stMultiSelect"] label p,
+        [data-testid="stTextInput"] label p,
+        [data-testid="stDateInput"] label p,
+        [data-testid="stNumberInput"] label p,
+        [data-testid="stTextArea"] label p {
+            color: #394045;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        code {
+            font-family: "JetBrains Mono", monospace;
+            font-size: 0.82em;
+            color: #334155;
+        }
+
+        @media (hover: none) {
+            [data-testid="stExpander"]:hover {
+                transform: none;
+                box-shadow: 0 1px 0 rgba(12, 24, 22, 0.04);
+            }
+        }
+
+        @media (max-width: 760px) {
+            .block-container {
+                padding-top: 1.4rem;
+            }
+
+            h1 {
+                text-align: left;
+            }
+
+            .stCaption {
+                text-align: left;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            * {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+                scroll-behavior: auto !important;
+            }
+        }
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )
+
+
 st.set_page_config(page_title="WG Bot Config", layout="centered")
+inject_styles()
 st.title("WG-Gesucht Bot Config")
+st.caption("Minimal config editor for `config.toml`.")
 
 cfg = load_config()
 
@@ -140,61 +321,42 @@ with st.expander("Profile"):
 # ── Save ──────────────────────────────────────────────────────────────────────
 st.divider()
 if st.button("Save config.toml", type="primary", use_container_width=True):
-    errors = []
-    if max_rent <= 0:
-        errors.append("Max rent must be > 0.")
-    if move_in_from > move_in_to:
-        errors.append("Move-in from must be ≤ move-in to.")
-    if move_in_to > stay_until:
-        errors.append("Move-in to must be ≤ stay until.")
-    if max_pages < 1:
-        errors.append("Max pages must be ≥ 1.")
-    if not url.strip():
-        errors.append("Search URL cannot be empty.")
+    values = {
+        "url": url,
+        "max_rent": max_rent,
+        "move_in_from": move_in_from,
+        "move_in_to": move_in_to,
+        "stay_until": stay_until,
+        "search_apartments": search_apartments,
+        "search_wg": search_wg,
+        "furnished_only": furnished_only,
+        "pets_allowed": pets_allowed,
+        "categories": categories,
+        "last_online_max_days": last_online_max_days,
+        "max_pages": max_pages,
+        "headless": headless,
+        "preferred_raw": preferred_raw,
+        "fallback_city": fallback_city,
+        "wg_size_max": wg_size_max,
+        "flatshare_types": flatshare_types,
+        "ai_enabled": ai_enabled,
+        "model": model,
+        "max_calls_per_run": max_calls_per_run,
+        "max_detail_chars": max_detail_chars,
+        "max_output_tokens": max_output_tokens,
+        "profile_name": profile_name,
+        "profile_context": profile_context,
+        "must_haves_raw": must_haves_raw,
+        "strong_prefs_raw": strong_prefs_raw,
+        "nice_raw": nice_raw,
+    }
+    errors = validate_form(values)
 
     if errors:
         for e in errors:
             st.error(e)
     else:
-        new_cfg = {
-            "search": {
-                "url": url.strip(),
-                "max_rent": int(max_rent),
-                "move_in_from": move_in_from.isoformat(),
-                "move_in_to": move_in_to.isoformat(),
-                "stay_until": stay_until.isoformat(),
-                "search_apartments": search_apartments,
-                "search_wg": search_wg,
-                "furnished_only": furnished_only,
-                "pets_allowed": pets_allowed,
-                "categories": [int(c) for c in categories],
-                "last_online_max_days": int(last_online_max_days),
-                "max_pages": int(max_pages),
-                "headless": headless,
-            },
-            "districts": {
-                "preferred": lines_to_list(preferred_raw),
-                "fallback_city": fallback_city.strip(),
-            },
-            "wg": {
-                "wg_size_max": int(wg_size_max),
-                "flatshare_types": flatshare_types,
-            },
-            "ai": {
-                "enabled": ai_enabled,
-                "model": model.strip(),
-                "max_calls_per_run": int(max_calls_per_run),
-                "max_detail_chars": int(max_detail_chars),
-                "max_output_tokens": int(max_output_tokens),
-            },
-            "profile": {
-                "name": profile_name.strip(),
-                "context": "\n" + profile_context.strip() + "\n",
-                "must_haves": lines_to_list(must_haves_raw),
-                "strong_preferences": lines_to_list(strong_prefs_raw),
-                "nice_to_haves": lines_to_list(nice_raw),
-            },
-        }
+        new_cfg = build_config(cfg, values)
         with open(CONFIG_PATH, "wb") as f:
             tomli_w.dump(new_cfg, f)
         st.cache_data.clear()
