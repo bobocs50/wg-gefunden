@@ -1,11 +1,21 @@
-import tomllib
 import tomli_w
 import streamlit as st
+import sys
 from datetime import date
 from pathlib import Path
+
+ROOT_DIR = Path(__file__).resolve().parent.parent
+if str(ROOT_DIR) not in sys.path:
+    sys.path.insert(0, str(ROOT_DIR))
+
 from src.ui_config import build_config, validate_form
 
-CONFIG_PATH = Path(__file__).resolve().parent.parent / "config.toml"
+try:
+    import tomllib  # Python 3.11+
+except ModuleNotFoundError:  # pragma: no cover - runtime compatibility branch
+    import tomli as tomllib
+
+CONFIG_PATH = ROOT_DIR / "config.toml"
 
 WG_TYPE_LABELS = {
     "2": "2 – Frauen-WG",
@@ -42,24 +52,30 @@ def inject_styles() -> None:
         @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500&display=swap');
 
         :root {
-            --bg-main: #f5f6f8;
+            --bg-main: #f6f8fb;
             --surface: #ffffff;
-            --surface-soft: #ffffff;
-            --text-main: #121417;
-            --text-muted: #7a8187;
-            --line: #e9edf1;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --line: #e2e8f0;
             --accent: #2d63e2;
             --accent-strong: #214ec2;
             --ease-out-strong: cubic-bezier(0.23, 1, 0.32, 1);
         }
 
-        html, body, [class*="css"] {
+        html, body, .stApp {
             font-family: "Manrope", sans-serif;
         }
 
+        [data-testid="stAppViewContainer"],
+        [data-testid="stMain"],
         .stApp {
             background: var(--bg-main);
             color: var(--text-main);
+        }
+
+        header[data-testid="stHeader"] {
+            background: transparent !important;
+            border-bottom: none !important;
         }
 
         .block-container {
@@ -94,6 +110,11 @@ def inject_styles() -> None:
             transition: border-color 150ms var(--ease-out-strong), background-color 150ms var(--ease-out-strong);
         }
 
+        [data-testid="stExpander"] > details,
+        [data-testid="stExpander"] > details > summary {
+            background: #ffffff !important;
+        }
+
         [data-testid="stExpander"]:hover {
             border-color: #dfe5ea;
             box-shadow: none;
@@ -114,8 +135,17 @@ def inject_styles() -> None:
         [data-testid="stTextArea"] textarea {
             border: 1px solid var(--line);
             border-radius: 7px;
-            background: #fff;
+            background: #ffffff !important;
+            color: var(--text-main) !important;
             transition: border-color 140ms var(--ease-out-strong), box-shadow 140ms var(--ease-out-strong), transform 120ms var(--ease-out-strong);
+        }
+
+        [data-testid="stTextInput"] [data-baseweb="input"],
+        [data-testid="stNumberInput"] [data-baseweb="input"],
+        [data-testid="stDateInput"] [data-baseweb="input"],
+        [data-testid="stTextArea"] [data-baseweb="textarea"] {
+            background: #ffffff !important;
+            border-color: var(--line) !important;
         }
 
         [data-testid="stTextInput"] input:focus,
@@ -126,10 +156,23 @@ def inject_styles() -> None:
             box-shadow: 0 0 0 3px rgba(45, 99, 226, 0.12);
         }
 
+        [data-testid="stNumberInput"] button {
+            background: #ffffff !important;
+            color: #334155 !important;
+            border-left: 1px solid var(--line) !important;
+        }
+
         [data-testid="stMultiSelect"] [data-baseweb="select"] > div {
             border-radius: 7px;
-            border-color: var(--line);
+            border-color: var(--line) !important;
+            background: #ffffff !important;
             transition: border-color 150ms var(--ease-out-strong), box-shadow 150ms var(--ease-out-strong);
+        }
+
+        [data-testid="stMultiSelect"] [data-baseweb="tag"] {
+            background: #eff6ff !important;
+            border: 1px solid #dbeafe !important;
+            color: #1e3a8a !important;
         }
 
         [data-testid="stMultiSelect"] [data-baseweb="select"] > div:focus-within {
