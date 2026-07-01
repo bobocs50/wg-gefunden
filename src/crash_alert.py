@@ -9,6 +9,7 @@ alerts the operator instead of dying in the cron log.
 
 Nothing in this module may import ``src.config``. That is the whole point.
 """
+import html
 import sys
 import traceback
 from typing import Callable
@@ -31,11 +32,14 @@ def format_alert(entry_point: str, exc_type: type, exc_value: BaseException, tb)
     summary = f"{exc_type.__name__}: {exc_value}"
     if len(summary) > 200:
         summary = summary[:200] + "…"
+    # Telegram uses HTML parse mode: escape entities in user-controlled strings.
+    # Python tracebacks contain "<module>" as a frame name, which Telegram would
+    # otherwise reject as an unknown tag ("Bad Request: Unsupported start tag").
     return (
         f"🚨 <b>WG-Gesucht bot crashed</b>\n"
-        f"entry: <code>{entry_point}</code>\n"
-        f"error: <code>{summary}</code>\n\n"
-        f"<pre>{tail}</pre>"
+        f"entry: <code>{html.escape(entry_point)}</code>\n"
+        f"error: <code>{html.escape(summary)}</code>\n\n"
+        f"<pre>{html.escape(tail)}</pre>"
     )
 
 

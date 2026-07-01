@@ -37,6 +37,45 @@ class TestFormatAlert(unittest.TestCase):
         # The message header + 1500 char tail. Keep a generous ceiling.
         self.assertLess(len(msg), 3000)
 
+    def test_alert_escapes_html_in_traceback(self):
+        """Python tracebacks contain "<module>" as a frame name when the raise
+        happens at module top level. Telegram uses HTML parse mode and rejects
+        unknown tags with a 400. Any HTML-looking text must be escaped before
+        it lands in the alert body.
+
+        Regression test — this failed live on the server 2026-07-01 with
+        "Bad Request: can't parse entities: Unsupported start tag \"module\"".
+        """
+        # Compile+exec a top-level raise so the traceback's frame name is
+        # "<module>" — same shape as the real config.toml crash.
+        code = compile("raise FileNotFoundError('config.toml missing')",
+                       "<synthetic>", "exec")
+        try:
+            exec(code, {})
+        except FileNotFoundError as exc:
+            raw_trace = "".join(
+                __import__("traceback").format_exception(type(exc), exc, exc.__traceback__)
+            )
+            self.assertIn("<module>", raw_trace,
+                          "sanity: synthetic traceback must contain the <module> frame")
+            msg = crash_alert.format_alert("main.py", type(exc), exc, exc.__traceback__)
+        # The literal "<module>" must never appear in the outgoing message:
+        # if it did, Telegram would 400 and the alert would be dropped.
+        self.assertNotIn("<module>", msg)
+        # The escaped form should be present, proving the frame was preserved
+        # in readable form for the operator.
+        self.assertIn("&lt;module&gt;", msg)
+
+    def test_alert_escapes_html_in_exception_message(self):
+        try:
+            raise ValueError("<script>alert(1)</script>")
+        except ValueError as exc:
+            msg = crash_alert.format_alert("main.py", type(exc), exc, exc.__traceback__)
+        # Attack-shaped content in the exception message must not become
+        # active markup in the Telegram message.
+        self.assertNotIn("<script>", msg)
+        self.assertIn("&lt;script&gt;", msg)
+
 
 class TestInstallExcepthook(unittest.TestCase):
     def setUp(self):
