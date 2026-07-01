@@ -104,6 +104,14 @@ class TestEntryPointsWireInHook(unittest.TestCase):
         self.assertGreater(config_idx, install_idx,
                            "install_excepthook must run before src.config is imported")
 
+    def test_kleinanzeigen_scan_installs_excepthook_before_config_import(self):
+        text = (ROOT / "scripts" / "kleinanzeigen_scan.py").read_text()
+        install_idx = text.find("install_excepthook(")
+        config_idx = text.find("from src.config")
+        self.assertGreater(install_idx, 0, "kleinanzeigen_scan.py must call install_excepthook")
+        self.assertGreater(config_idx, install_idx,
+                           "install_excepthook must run before src.config is imported")
+
 
 class TestConfigLoaderErrorMessage(unittest.TestCase):
     """config.toml missing is the most common cause of the silent crash.

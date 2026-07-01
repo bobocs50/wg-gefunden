@@ -16,6 +16,12 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 from dotenv import load_dotenv
 load_dotenv()
 
+# Wire the crash reporter BEFORE any src.config import so a missing
+# config.toml (or any other import-time failure) alerts Telegram instead
+# of dying silently in logs/kleinanzeigen.log.
+from src.crash_alert import install_excepthook
+install_excepthook("scripts/kleinanzeigen_scan.py")
+
 from playwright.sync_api import Page, BrowserContext, sync_playwright
 
 from src.listing import Listing
