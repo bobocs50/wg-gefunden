@@ -10,7 +10,17 @@ ROOT_DIR = Path(__file__).resolve().parent.parent
 
 
 def _load() -> dict:
-    with open(ROOT_DIR / "config.toml", "rb") as f:
+    path = ROOT_DIR / "config.toml"
+    if not path.exists():
+        # config.toml is gitignored — a fresh clone or server deploy has to
+        # copy it over from config.toml.example. State that explicitly so
+        # the crash-alert Telegram message is actionable.
+        raise FileNotFoundError(
+            f"config.toml not found at {path}. "
+            f"Copy config.toml.example to config.toml and edit it "
+            f"(config.toml is gitignored and must be provisioned per-host)."
+        )
+    with open(path, "rb") as f:
         return tomllib.load(f)
 
 

@@ -11,6 +11,11 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from dotenv import load_dotenv
 load_dotenv(Path(__file__).resolve().parent.parent / ".env")
 
+# Install the crash reporter BEFORE importing src.config so a missing
+# config.toml still triggers a Telegram alert.
+from src.crash_alert import install_excepthook
+install_excepthook("scripts/heartbeat.py")
+
 from datetime import datetime
 from src.stats import load_since
 from src.config import SEEN_IDS_FILE, SESSION_FILE

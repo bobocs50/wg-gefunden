@@ -5,6 +5,12 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+# Wire the last-resort crash reporter BEFORE any src.config import.
+# A missing config.toml (or any other import-time failure) still notifies
+# Telegram instead of dying silently in the cron log.
+from src.crash_alert import install_excepthook
+install_excepthook("main.py")
+
 from src.auth import ensure_session
 from src.config import AI_ENABLED, CRAWL_MAX_PAGES, HEADLESS
 from src.crawler import crawl
