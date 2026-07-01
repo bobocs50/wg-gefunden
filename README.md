@@ -276,17 +276,15 @@ tests/               unit tests
 
 Designed to run as a cron job on any small Linux box. The author runs it on a **Hetzner Cloud CX23** instance for **€4.75 / month** — the whole pipeline (Playwright + OpenAI calls + Telegram) fits comfortably with headroom to spare.
 
-Example cron entry (every 10 minutes):
+Example crontab (WG-Gesucht every 10 min, Kleinanzeigen every 15 min offset by 5, daily heartbeat at 09:00):
 
 ```cron
-*/10 * * * * cd /root/wggefunden && /root/wggefunden/venv/bin/python3 main.py >> /var/log/wggefunden.log 2>&1
+*/10 * * * * cd /root/wggefunden && flock -n /tmp/wggefunden-main.lock timeout 600 /root/wggefunden/venv/bin/python3 main.py >> /var/log/wggefunden.log 2>&1
+5-59/15 * * * * cd /root/wggefunden && flock -n /tmp/wggefunden-ka.lock timeout 900 /root/wggefunden/venv/bin/python3 scripts/kleinanzeigen_scan.py >> /var/log/wggefunden-ka.log 2>&1
+0 9 * * * cd /root/wggefunden && timeout 120 /root/wggefunden/venv/bin/python3 scripts/heartbeat.py >> /var/log/wggefunden-heartbeat.log 2>&1
 ```
 
-Plus a daily heartbeat at 09:00:
-
-```cron
-0 9 * * * cd /root/wggefunden && /root/wggefunden/venv/bin/python3 scripts/heartbeat.py
-```
+`flock -n` skips a tick if the previous run is still going, preventing overlapping writes to `data/stats.json` and `data/seen_ids.json`. `timeout` bounds Playwright/browser hangs so a stuck run can't block the next scheduled tick.
 
 OpenAI usage with `[ai].enabled = true` and `MAX_AI_CALLS_PER_RUN = 3` typically stays under **$1 / month** on `gpt-4.1-mini`.
 
