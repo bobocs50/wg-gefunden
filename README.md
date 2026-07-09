@@ -260,7 +260,8 @@ src/
   crawler.py         WG-Gesucht scraping
   filters.py         deterministic listing filters
   pipeline.py        end-to-end decision pipeline
-  ai.py              optional OpenAI evaluation layer
+  ai.py              optional OpenAI evaluation layer + contact-note drafting
+  contact.py         best-effort owner-name extraction (standalone, not yet wired into pipeline)
   telegram.py        Telegram notifier
   ui_config.py       Streamlit form validation + safe config merge
 scripts/
@@ -268,9 +269,19 @@ scripts/
   ui.py              Streamlit config editor
   heartbeat.py       daily bot health report
   kleinanzeigen_scan.py
+  inspect_search.py         interactive crawler debugging
+  inspect_contact_form.py   read-only probe for WG-Gesucht's contact-form DOM (never submits)
 main.py              primary bot entrypoint
 tests/               unit tests
 ```
+
+**Note on contact drafting:** `src/contact.py` (owner-name extraction) and `ai.py::draft_apartment_note()`
+(short per-listing note) exist as tested standalone building blocks for composing a ready-to-paste
+WG-Gesucht contact message, delivered via Telegram for the user to send by hand. Full automated
+form-submission was deliberately not built — WG-Gesucht's message-send endpoint sits behind Cloudflare
+Bot Management and serves a logged-out wall to headless sessions even with valid login cookies.
+Owner names are also often rendered as small images rather than text, another deliberate anti-scraping
+measure — most drafts fall back to a generic salutation.
 
 ## Deployment
 
