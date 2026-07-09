@@ -64,6 +64,7 @@ SESSION_FILE = DATA_DIR / "session.json"
 AI_ENABLED: bool = _cfg["ai"]["enabled"]
 OPENAI_MODEL: str = _cfg["ai"]["model"]
 AI_PROMPT_FILE = ROOT_DIR / "prompts" / "listing_analysis.md"
+CONTACT_NOTE_PROMPT_FILE = ROOT_DIR / "prompts" / "contact_note.md"
 MAX_AI_CALLS_PER_RUN: int = _cfg["ai"]["max_calls_per_run"]
 MAX_DETAIL_CHARS: int = _cfg["ai"]["max_detail_chars"]
 MAX_OUTPUT_TOKENS: int = _cfg["ai"]["max_output_tokens"]

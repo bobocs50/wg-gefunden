@@ -6,6 +6,7 @@ from openai import OpenAI
 
 from src.config import (
     AI_PROMPT_FILE,
+    CONTACT_NOTE_PROMPT_FILE,
     OPENAI_MODEL,
     MAX_OUTPUT_TOKENS,
     PROFILE_CONTEXT,
@@ -19,6 +20,7 @@ from src.listing import Listing
 _REQUIRED_KEYS = {"scam_score", "recommendation_score"}
 
 _prompt_cache: str | None = None
+_contact_note_prompt_cache: str | None = None
 _client: OpenAI | None = None
 _client_lock = threading.Lock()
 
@@ -28,6 +30,13 @@ def _load_prompt() -> str:
     if _prompt_cache is None:
         _prompt_cache = AI_PROMPT_FILE.read_text(encoding="utf-8")
     return _prompt_cache
+
+
+def _load_contact_note_prompt() -> str:
+    global _contact_note_prompt_cache
+    if _contact_note_prompt_cache is None:
+        _contact_note_prompt_cache = CONTACT_NOTE_PROMPT_FILE.read_text(encoding="utf-8")
+    return _contact_note_prompt_cache
 
 
 def _bullet_list(items: list[str]) -> str:
@@ -117,5 +126,30 @@ def analyze(listing: Listing, detail_text: str) -> dict | None:
     except Exception as e:
         print(f"OpenAI error: {e}")
         return None
+
+
+def draft_apartment_note(listing: Listing, detail_text: str) -> str:
+    """Draft a short 2-3 sentence, first-person note about the listing for a contact message.
+
+    Returns "" on any failure — never blocks the pipeline.
+    """
+    if not os.getenv("OPENAI_API_KEY"):
+        return ""
+
+    prompt = (
+        _load_contact_note_prompt()
+        .replace("{{LISTING}}", _listing_block(listing) + f"\nURL: {listing.url}")
+        .replace("{{DETAIL_TEXT}}", detail_text if detail_text else "(no detail text available)")
+    )
+    try:
+        response = _get_client().chat.completions.create(
+            model=OPENAI_MODEL,
+            messages=[{"role": "user", "content": prompt}],
+            max_tokens=150,
+        )
+        return response.choices[0].message.content.strip()
+    except Exception as e:
+        print(f"OpenAI error (contact note): {e}")
+        return ""
 
 
